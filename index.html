@@ -1,0 +1,2887 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Промышленная маркировка — Первый Бит</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;900&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --pink: #E8007D;
+    --pink-light: #FF1A8C;
+    --pink-dark: #C0006A;
+    --pink-glow: rgba(232,0,125,0.15);
+    --black: #0A0A0A;
+    --gray-900: #111111;
+    --gray-800: #1A1A1A;
+    --gray-700: #2A2A2A;
+    --gray-200: #E5E5E5;
+    --gray-100: #F5F5F5;
+    --white: #FFFFFF;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* Улучшаем tap-targets на мобильных — минимум 44px */
+  a, button { -webkit-tap-highlight-color: transparent; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Golos Text', sans-serif;
+    background: var(--black);
+    color: var(--white);
+    overflow-x: hidden;
+  }
+
+  /* ── NAV ───────────────────────────────────────── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 48px;
+    background: rgba(10,10,10,0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(232,0,125,0.2);
+  }
+  .logo {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 13px; font-weight: 700; letter-spacing: 0.08em;
+    color: var(--white);
+  }
+  .logo span { color: var(--pink); }
+  nav ul { display: flex; gap: 32px; list-style: none; }
+  nav a {
+    font-size: 12px; font-weight: 500; letter-spacing: 0.06em;
+    color: rgba(255,255,255,0.6); text-decoration: none;
+    text-transform: uppercase; transition: color .2s;
+  }
+  nav a:hover { color: var(--pink); }
+
+  /* ── HERO ──────────────────────────────────────── */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 140px 48px 80px;
+    position: relative; overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 80% 50%, rgba(232,0,125,0.18) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 60% at 10% 80%, rgba(232,0,125,0.08) 0%, transparent 60%),
+      linear-gradient(160deg, #0A0A0A 0%, #111111 100%);
+  }
+  .hero-grid {
+    position: absolute; inset: 0; z-index: 0; opacity: 0.04;
+    background-image:
+      linear-gradient(var(--pink) 1px, transparent 1px),
+      linear-gradient(90deg, var(--pink) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+  .hero-content { position: relative; z-index: 1; max-width: 900px; }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(232,0,125,0.12); border: 1px solid rgba(232,0,125,0.3);
+    color: var(--pink); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 6px 16px; border-radius: 100px;
+    margin-bottom: 32px;
+    animation: fadeUp .6s ease forwards;
+  }
+  .hero-badge::before {
+    content: ''; width: 6px; height: 6px;
+    background: var(--pink); border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.4); }
+  }
+
+  /* ── HERO LINE REVEAL — стили для split-text анимации ── */
+  /* Паттерн: Mask Reveal — текст выезжает из-за маски      */
+  .hero-line-wrap {
+    display: block;
+    overflow: hidden; /* маска — скрывает .hero-line-inner до анимации */
+  }
+  .hero-line-inner {
+    display: block;
+    /* Начальное состояние — скрыт под маской */
+    transform: translateY(110%);
+    opacity: 0;
+    animation: lineReveal .8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  /* Задержки для каждой строки — stagger эффект */
+  .hero-line-inner.l1 { animation-delay: .05s; }
+  .hero-line-inner.l2 { animation-delay: .15s; }
+  .hero-line-inner.l3 { animation-delay: .25s; }
+
+  @keyframes lineReveal {
+    from { transform: translateY(110%); opacity: 0; }
+    to   { transform: translateY(0);   opacity: 1; }
+  }
+
+  /* Fallback: если анимация не сработала за 1.2s — принудительно показываем */
+  /* Это CSS-only fallback через animation-fill-mode и очень короткий таймер */
+  h1 {
+    font-family: 'Unbounded', sans-serif;
+    font-size: clamp(36px, 6vw, 80px);
+    font-weight: 900; line-height: 1.05;
+    letter-spacing: -0.02em;
+    /* Убираем animation с both — h1 сам по себе всегда видим,
+       анимируются только .hero-line-inner внутри него */
+  }
+  h1 em { font-style: normal; color: var(--pink); }
+  .hero-sub {
+    margin-top: 24px; max-width: 560px;
+    font-size: 18px; line-height: 1.6;
+    color: rgba(255,255,255,0.65);
+    /* forwards вместо both — элемент виден до начала анимации */
+    animation: fadeUp .7s ease .3s forwards;
+  }
+  .hero-cta {
+    display: flex; gap: 16px; margin-top: 48px; flex-wrap: wrap;
+    animation: fadeUp .7s ease .45s forwards;
+  }
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--pink); color: var(--white);
+    font-family: 'Unbounded', sans-serif; font-size: 12px;
+    font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 16px 32px; border-radius: 4px;
+    text-decoration: none; border: none; cursor: pointer;
+    transition: all .25s;
+    /* Минимальный touch-target для мобильных */
+    min-height: 44px;
+    will-change: transform;
+  }
+  .btn-primary:hover { background: var(--pink-light); transform: translateY(-2px); box-shadow: 0 12px 32px rgba(232,0,125,0.4); }
+  .btn-ghost {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: transparent; color: var(--white);
+    font-family: 'Unbounded', sans-serif; font-size: 12px;
+    font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 16px 32px; border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.2);
+    text-decoration: none; cursor: pointer;
+    transition: all .25s;
+    /* Минимальный touch-target для мобильных */
+    min-height: 44px;
+  }
+  .btn-ghost:hover { border-color: var(--pink); color: var(--pink); }
+  .hero-stats {
+    display: flex; gap: 48px; margin-top: 72px; padding-top: 48px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    animation: fadeUp .7s ease .6s forwards;
+    flex-wrap: wrap;
+  }
+  .stat-num {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 40px; font-weight: 900; color: var(--pink); line-height: 1;
+  }
+  .stat-label { font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 6px; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── SECTION BASE ─────────────────────────────── */
+  section { padding: 100px 48px; }
+  .section-label {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--pink);
+    margin-bottom: 16px;
+  }
+  h2 {
+    font-family: 'Unbounded', sans-serif;
+    font-size: clamp(28px, 4vw, 52px);
+    font-weight: 900; line-height: 1.1; letter-spacing: -0.02em;
+    margin-bottom: 20px;
+  }
+  .section-intro {
+    font-size: 17px; line-height: 1.7;
+    color: rgba(255,255,255,0.6); max-width: 600px;
+    margin-bottom: 64px;
+  }
+
+  /* ── ABOUT ────────────────────────────────────── */
+  .about { background: var(--gray-900); }
+  .about-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 80px;
+    align-items: center;
+  }
+  .about-nums {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 2px;
+  }
+  .num-card {
+    background: var(--gray-800); padding: 32px;
+    border: 1px solid rgba(255,255,255,0.04);
+    transition: border-color .25s;
+  }
+  .num-card:hover { border-color: rgba(232,0,125,0.4); }
+  .num-card:first-child { border-radius: 12px 0 0 0; }
+  .num-card:nth-child(2) { border-radius: 0 12px 0 0; }
+  .num-card:nth-child(3) { border-radius: 0 0 0 12px; }
+  .num-card:last-child { border-radius: 0 0 12px 0; }
+  .num-big {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 48px; font-weight: 900; color: var(--pink); line-height: 1;
+  }
+  .num-desc { font-size: 13px; color: rgba(255,255,255,0.55); margin-top: 8px; line-height: 1.4; }
+  .about-text p { font-size: 16px; line-height: 1.8; color: rgba(255,255,255,0.7); margin-bottom: 20px; }
+  .about-text strong { color: var(--white); }
+
+  /* ── HOW IT WORKS ─────────────────────────────── */
+  .how { background: var(--black); }
+  .flow-steps {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;
+  }
+  .flow-step {
+    position: relative; padding: 32px 24px;
+    background: var(--gray-800); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px; transition: all .25s;
+  }
+  .flow-step:hover { border-color: var(--pink); transform: translateY(-4px); }
+  .flow-step::after {
+    content: '→';
+    position: absolute; right: -20px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 20px; color: var(--pink); font-weight: 700;
+  }
+  .flow-step:last-child::after { display: none; }
+  .step-num {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 11px; font-weight: 700; color: var(--pink);
+    letter-spacing: 0.1em; margin-bottom: 12px;
+  }
+  .step-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 14px; font-weight: 700; line-height: 1.3; margin-bottom: 12px;
+  }
+  .step-desc { font-size: 13px; line-height: 1.6; color: rgba(255,255,255,0.55); }
+
+  /* ── RISKS ────────────────────────────────────── */
+  .risks { background: var(--gray-900); }
+  .risks-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
+  .risk-block {
+    padding: 40px; border-radius: 8px;
+    background: var(--gray-800); border: 1px solid rgba(255,255,255,0.06);
+  }
+  .risk-block.danger { border-color: rgba(232,0,125,0.3); background: rgba(232,0,125,0.05); }
+  .risk-label {
+    font-family: 'Unbounded', sans-serif; font-size: 10px;
+    font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .risk-label.red { color: var(--pink); }
+  .risk-label.gray { color: rgba(255,255,255,0.4); }
+  .risk-item { display: flex; gap: 12px; margin-bottom: 16px; align-items: flex-start; }
+  .risk-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--pink); flex-shrink: 0; margin-top: 7px; }
+  .risk-text { font-size: 15px; line-height: 1.5; color: rgba(255,255,255,0.8); }
+  .risk-highlight {
+    margin-top: 28px; padding: 20px 24px;
+    background: rgba(232,0,125,0.1); border: 1px solid rgba(232,0,125,0.25);
+    border-radius: 6px;
+    font-size: 15px; font-weight: 600; line-height: 1.5;
+  }
+
+  /* ── STAGES ───────────────────────────────────── */
+  .stages { background: var(--black); }
+  .stages-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 0;
+    border: 1px solid rgba(255,255,255,0.08); border-radius: 8px;
+    overflow: hidden;
+  }
+  .stage-item {
+    padding: 28px 20px; border-right: 1px solid rgba(255,255,255,0.08);
+    background: var(--gray-800); transition: background .25s;
+  }
+  .stage-item:last-child { border-right: none; }
+  .stage-item:hover { background: rgba(232,0,125,0.07); }
+  .stage-n {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--pink); color: var(--white);
+    font-family: 'Unbounded', sans-serif; font-size: 13px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 16px;
+  }
+  .stage-name { font-family: 'Unbounded', sans-serif; font-size: 11px; font-weight: 700; line-height: 1.3; margin-bottom: 10px; }
+  .stage-desc { font-size: 11px; line-height: 1.5; color: rgba(255,255,255,0.5); }
+
+  /* ── SOLUTIONS ────────────────────────────────── */
+  .solutions { background: var(--gray-900); }
+  .solutions-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .sol-card {
+    background: var(--gray-800); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px; overflow: hidden; transition: all .25s;
+  }
+  .sol-card:hover { border-color: var(--pink); transform: translateY(-4px); box-shadow: 0 20px 48px rgba(232,0,125,0.15); }
+  .sol-top { background: var(--pink); padding: 24px; }
+  .sol-top.dark { background: var(--gray-700); }
+  .sol-icon { font-size: 32px; margin-bottom: 8px; }
+  .sol-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 14px; font-weight: 700; color: var(--white); line-height: 1.3;
+  }
+  .sol-body { padding: 24px; }
+  .sol-point { display: flex; gap: 10px; margin-bottom: 12px; align-items: flex-start; }
+  .sol-point-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--pink); flex-shrink: 0; margin-top: 8px; }
+  .sol-point span { font-size: 13px; line-height: 1.5; color: rgba(255,255,255,0.75); }
+
+  /* ── PRINT TYPES ──────────────────────────────── */
+  .printing { background: var(--black); }
+  .print-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; }
+  .print-card {
+    padding: 36px 28px; background: var(--gray-800);
+    border: 1px solid rgba(255,255,255,0.04);
+    transition: all .25s; cursor: default;
+  }
+  .print-card:hover { background: rgba(232,0,125,0.07); border-color: rgba(232,0,125,0.3); }
+  .print-num {
+    font-family: 'Unbounded', sans-serif; font-size: 48px;
+    font-weight: 900; color: rgba(232,0,125,0.2); line-height: 1;
+    margin-bottom: 16px;
+  }
+  .print-name {
+    font-family: 'Unbounded', sans-serif; font-size: 14px;
+    font-weight: 700; color: var(--pink); margin-bottom: 16px;
+  }
+  .print-desc { font-size: 13px; line-height: 1.6; color: rgba(255,255,255,0.6); }
+  .print-tag {
+    display: inline-block; margin-top: 16px;
+    background: rgba(232,0,125,0.1); border: 1px solid rgba(232,0,125,0.2);
+    color: rgba(232,0,125,0.9); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 4px 12px; border-radius: 100px;
+  }
+
+  /* ── AGGREGATION ──────────────────────────────── */
+  .aggregation { background: var(--gray-900); }
+  .agg-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; align-items: stretch; }
+  .agg-card {
+    border: 1px solid rgba(255,255,255,0.06); border-radius: 8px;
+    overflow: hidden; transition: all .25s;
+    display: flex; flex-direction: column;
+  }
+  .agg-card:hover { border-color: var(--pink); transform: translateY(-4px); }
+  .agg-head {
+    padding: 20px 24px;
+    background: linear-gradient(135deg, var(--gray-700), var(--gray-800));
+    display: flex; align-items: center; gap: 12px;
+    flex-shrink: 0;
+  }
+  .agg-head.active { background: linear-gradient(135deg, var(--pink-dark), var(--pink)); }
+  .agg-num {
+    font-family: 'Unbounded', sans-serif; font-size: 28px;
+    font-weight: 900; color: rgba(255,255,255,0.2);
+  }
+  .agg-head.active .agg-num { color: rgba(255,255,255,0.4); }
+  .agg-name {
+    font-family: 'Unbounded', sans-serif; font-size: 13px;
+    font-weight: 700; color: var(--white); line-height: 1.2;
+  }
+  .agg-body {
+    padding: 20px 24px; background: var(--gray-800);
+    flex: 1; display: flex; flex-direction: column;
+  }
+  .agg-item { display: flex; gap: 8px; margin-bottom: 10px; align-items: flex-start; }
+  .agg-item span { font-size: 12px; line-height: 1.5; color: rgba(255,255,255,0.6); }
+  .plus-icon { color: var(--pink); font-weight: 700; font-size: 14px; line-height: 1.4; flex-shrink: 0; }
+  .minus-icon { color: rgba(255,100,100,0.8); font-weight: 700; font-size: 14px; line-height: 1.4; flex-shrink: 0; }
+
+  /* ── ARCHITECTURE ─────────────────────────────── */
+  .architecture { background: var(--black); }
+  .arch-layers {
+    display: flex; flex-direction: column; gap: 4px; max-width: 700px; margin: 0 auto;
+  }
+  .arch-layer {
+    display: flex; align-items: center; gap: 24px;
+    padding: 20px 28px; border-radius: 4px;
+    cursor: default;
+    /* opacity/transform управляются анимационным CSS ниже */
+  }
+  /* hover только когда анимация уже завершилась */
+  .arch-layers.visible .arch-layer:hover { transform: translateX(8px) !important; }
+  .arch-layer.l4 { background: var(--pink); }
+  .arch-layer.l3 { background: rgba(232,0,125,0.7); }
+  .arch-layer.l2 { background: rgba(232,0,125,0.4); }
+  .arch-layer.l1 { background: rgba(232,0,125,0.15); }
+  .arch-lnum {
+    font-family: 'Unbounded', sans-serif; font-size: 11px;
+    font-weight: 700; letter-spacing: 0.1em; opacity: 0.7; min-width: 20px;
+  }
+  .arch-lname {
+    font-family: 'Unbounded', sans-serif; font-size: 14px;
+    font-weight: 700;
+  }
+  .arch-ldesc {
+    font-size: 13px; color: rgba(255,255,255,0.7); margin-left: auto; text-align: right;
+  }
+
+  /* ── ADVANTAGES ───────────────────────────────── */
+  .advantages { background: var(--gray-900); }
+  .adv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .adv-card {
+    padding: 36px; background: var(--gray-800);
+    border: 1px solid rgba(255,255,255,0.06); border-radius: 8px;
+    transition: all .25s;
+  }
+  .adv-card:hover { border-color: var(--pink); }
+  .adv-icon {
+    width: 48px; height: 48px; border-radius: 8px;
+    background: rgba(232,0,125,0.12); border: 1px solid rgba(232,0,125,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; margin-bottom: 20px;
+  }
+  .adv-title {
+    font-family: 'Unbounded', sans-serif; font-size: 14px;
+    font-weight: 700; margin-bottom: 12px; line-height: 1.3;
+    color: var(--pink);
+  }
+  .adv-desc { font-size: 14px; line-height: 1.7; color: rgba(255,255,255,0.65); }
+
+  /* ── CASES ────────────────────────────────────── */
+  .cases { background: var(--black); }
+  .cases-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .case-card {
+    background: var(--gray-800); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px; padding: 32px; transition: all .25s;
+  }
+  .case-card:hover { border-color: var(--pink); transform: translateY(-4px); }
+  .case-tag {
+    display: inline-block; background: var(--pink); color: var(--white);
+    font-family: 'Unbounded', sans-serif; font-size: 9px;
+    font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 4px; margin-bottom: 16px;
+  }
+  .case-title {
+    font-family: 'Unbounded', sans-serif; font-size: 15px;
+    font-weight: 700; line-height: 1.3; margin-bottom: 16px;
+  }
+  .case-desc { font-size: 13px; line-height: 1.6; color: rgba(255,255,255,0.6); }
+  .case-result {
+    margin-top: 20px; padding: 16px;
+    background: rgba(232,0,125,0.07); border: 1px solid rgba(232,0,125,0.2);
+    border-radius: 6px;
+    font-size: 13px; color: rgba(255,255,255,0.85); line-height: 1.5;
+  }
+  .case-result strong { color: var(--pink); }
+
+  /* ── CTA ──────────────────────────────────────── */
+  .cta {
+    background: var(--gray-900);
+    text-align: center; padding: 120px 48px;
+    position: relative; overflow: hidden;
+  }
+  .cta-bg {
+    position: absolute; inset: 0; z-index: 0;
+    background: radial-gradient(ellipse 60% 80% at 50% 50%, rgba(232,0,125,0.12) 0%, transparent 70%);
+  }
+  .cta-content { position: relative; z-index: 1; }
+  .cta h2 { margin-bottom: 20px; }
+  .cta p { font-size: 18px; color: rgba(255,255,255,0.6); max-width: 500px; margin: 0 auto 48px; line-height: 1.6; }
+  .cta-btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+  .contact-info { margin-top: 40px; font-size: 14px; color: rgba(255,255,255,0.4); }
+  .contact-info a { color: var(--pink); text-decoration: none; }
+
+  /* ── FOOTER ───────────────────────────────────── */
+  footer {
+    padding: 32px 48px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 13px; color: rgba(255,255,255,0.4);
+  }
+  footer a { color: var(--pink); text-decoration: none; }
+
+  /* ── STAGE TOOLTIP ────────────────────────────── */
+  .stage-item { position: relative; cursor: pointer; }
+  .stage-tooltip {
+    position: absolute; left: 50%; top: 100%;
+    transform: translateX(-50%) translateY(8px);
+    width: 260px; padding: 16px 18px;
+    background: var(--gray-700); border: 1px solid rgba(232,0,125,0.35);
+    border-radius: 8px; z-index: 50;
+    opacity: 0; pointer-events: none;
+    transition: opacity .25s, transform .25s;
+    transform: translateX(-50%) translateY(16px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.6);
+  }
+  .stage-item:hover .stage-tooltip {
+    opacity: 1; pointer-events: auto;
+    transform: translateX(-50%) translateY(8px);
+  }
+  .stage-tooltip::before {
+    content: ''; position: absolute; top: -6px; left: 50%;
+    transform: translateX(-50%); width: 12px; height: 12px;
+    background: var(--gray-700); border-left: 1px solid rgba(232,0,125,0.35);
+    border-top: 1px solid rgba(232,0,125,0.35);
+    transform: translateX(-50%) rotate(45deg);
+  }
+  .tt-step { display: flex; gap: 8px; margin-bottom: 8px; align-items: flex-start; }
+  .tt-step:last-child { margin-bottom: 0; }
+  .tt-num {
+    font-family: 'Unbounded', sans-serif; font-size: 9px; font-weight: 700;
+    color: var(--pink); opacity: 0.6; min-width: 22px; margin-top: 2px;
+  }
+  .tt-text { font-size: 12px; line-height: 1.4; color: rgba(255,255,255,0.75); }
+  .tt-text strong { color: var(--white); }
+
+  /* ── MANDATORY GOODS GRID ──────────────────────── */
+  .mandatory-goods { background: var(--gray-900); }
+  .mg-grid {
+    display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px;
+  }
+  .mg-item {
+    background: var(--gray-800); border: 1px solid rgba(255,255,255,0.04);
+    padding: 20px 12px; text-align: center;
+    transition: all .25s; cursor: default;
+  }
+  .mg-item:hover { background: rgba(232,0,125,0.07); border-color: rgba(232,0,125,0.3); }
+  .mg-icon { font-size: 28px; margin-bottom: 8px; }
+  .mg-name { font-size: 11px; line-height: 1.3; color: rgba(255,255,255,0.7); }
+  .mg-date { font-size: 9px; color: var(--pink); margin-top: 4px; font-weight: 600; }
+
+  /* ── EXPERIMENT ROADMAP ────────────────────────── */
+  .experiment { background: var(--black); }
+  .exp-timeline { position: relative; padding: 20px 0; }
+  .exp-timeline::before {
+    content: ''; position: absolute; left: 50%; top: 0; bottom: 0;
+    width: 2px; background: rgba(232,0,125,0.2);
+    transform: translateX(-50%);
+  }
+  .exp-row {
+    display: flex; align-items: center; gap: 40px;
+    margin-bottom: 24px; position: relative;
+  }
+  .exp-row.right { flex-direction: row-reverse; }
+  .exp-card {
+    flex: 1; max-width: calc(50% - 40px);
+    background: var(--gray-800); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px; padding: 20px 24px;
+    transition: all .25s;
+  }
+  .exp-card:hover { border-color: var(--pink); transform: translateY(-2px); }
+  .exp-card.done { opacity: 0.5; }
+  .exp-card.done .exp-card-name { text-decoration: line-through; }
+  .exp-dot {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--pink); flex-shrink: 0;
+    box-shadow: 0 0 12px rgba(232,0,125,0.5);
+    z-index: 2;
+  }
+  .exp-dot.done { background: var(--gray-700); box-shadow: none; }
+  .exp-card-name {
+    font-family: 'Unbounded', sans-serif; font-size: 13px;
+    font-weight: 700; color: var(--white); margin-bottom: 6px;
+  }
+  .exp-card-date {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--pink); font-weight: 500;
+  }
+  .exp-card.done .exp-card-date { color: rgba(255,255,255,0.3); }
+  .exp-spacer { flex: 1; max-width: calc(50% - 40px); }
+
+  /* ── EXPERIMENT PARTICIPATION ───────────────────── */
+  .exp-participation { background: var(--gray-900); }
+  .ep-cards { display: flex; flex-direction: column; gap: 0; }
+  .ep-card {
+    display: grid; grid-template-columns: 56px 1fr; gap: 0;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-bottom: none; background: var(--gray-800);
+    transition: all .3s; cursor: pointer; overflow: hidden;
+  }
+  .ep-card:first-child { border-radius: 8px 8px 0 0; }
+  .ep-card:last-child { border-bottom: 1px solid rgba(255,255,255,0.06); border-radius: 0 0 8px 8px; }
+  .ep-card:hover { background: rgba(232,0,125,0.04); }
+  .ep-card.ep-open { border-color: rgba(232,0,125,0.3); }
+  .ep-num {
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Unbounded', sans-serif; font-size: 14px;
+    font-weight: 900; color: var(--pink);
+    border-right: 1px solid rgba(255,255,255,0.06);
+    padding: 20px 0;
+  }
+  .ep-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 24px; gap: 16px;
+  }
+  .ep-title {
+    font-family: 'Unbounded', sans-serif; font-size: 13px;
+    font-weight: 700; color: var(--white); line-height: 1.3;
+  }
+  .ep-chevron {
+    width: 20px; height: 20px; flex-shrink: 0;
+    transition: transform .3s;
+    color: rgba(255,255,255,0.3);
+  }
+  .ep-open .ep-chevron { transform: rotate(180deg); color: var(--pink); }
+  .ep-details {
+    grid-column: 1 / -1;
+    max-height: 0; overflow: hidden;
+    transition: max-height .4s cubic-bezier(0.16,1,0.3,1);
+  }
+  .ep-open .ep-details { max-height: 400px; }
+  .ep-details-inner {
+    padding: 0 24px 24px 80px;
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px;
+  }
+  .ep-detail-label {
+    font-family: 'Unbounded', sans-serif; font-size: 8px;
+    font-weight: 700; letter-spacing: 0.15em;
+    color: rgba(255,255,255,0.35); margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  .ep-detail-text { font-size: 13px; line-height: 1.5; color: rgba(255,255,255,0.7); }
+  .ep-detail-text strong { color: var(--pink); }
+
+  /* ── SOFTWARE PAK ────────────────────────────── */
+  .software { background: var(--gray-900); }
+  .sw-header-badge {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: rgba(232,0,125,0.08); border: 1px solid rgba(232,0,125,0.25);
+    border-radius: 6px; padding: 12px 20px; margin-bottom: 48px;
+  }
+  .sw-header-badge-icon { font-size: 28px; }
+  .sw-header-badge-text {
+    font-family: 'Unbounded', sans-serif; font-size: 13px;
+    font-weight: 700; color: var(--pink); line-height: 1.3;
+  }
+  .sw-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .sw-card {
+    background: var(--gray-800); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px; padding: 36px; transition: all .25s;
+    display: flex; gap: 20px; align-items: flex-start;
+  }
+  .sw-card:hover { border-color: var(--pink); transform: translateY(-3px); }
+  .sw-card-icon {
+    width: 48px; height: 48px; border-radius: 10px;
+    background: rgba(232,0,125,0.12); border: 1px solid rgba(232,0,125,0.2);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .sw-card-icon svg { width: 24px; height: 24px; }
+  .sw-card-title {
+    font-family: 'Unbounded', sans-serif; font-size: 14px;
+    font-weight: 700; color: var(--pink); margin-bottom: 10px; line-height: 1.3;
+  }
+  .sw-card-desc { font-size: 14px; line-height: 1.7; color: rgba(255,255,255,0.65); }
+
+  @media (max-width: 768px) {
+    .sw-grid { grid-template-columns: 1fr; }
+    .sw-card { flex-direction: column; }
+  }
+
+  /* ── EXPERIMENT GOALS ──────────────────────────── */
+  .exp-goals { background: var(--black); }
+  .eg-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .eg-card {
+    padding: 36px; background: var(--gray-800);
+    border: 1px solid rgba(255,255,255,0.06); border-radius: 8px;
+    transition: all .25s; text-align: center;
+  }
+  .eg-card:hover { border-color: var(--pink); transform: translateY(-4px); }
+  .eg-icon { font-size: 40px; margin-bottom: 20px; }
+  .eg-title {
+    font-family: 'Unbounded', sans-serif; font-size: 14px;
+    font-weight: 700; color: var(--white); margin-bottom: 12px; line-height: 1.3;
+  }
+  .eg-desc { font-size: 14px; line-height: 1.7; color: rgba(255,255,255,0.6); }
+
+  /* ── RESPONSIVE OVERRIDES FOR NEW SECTIONS ──── */
+  @media (max-width: 1024px) {
+    .mg-grid { grid-template-columns: repeat(4, 1fr); }
+    .exp-timeline::before { left: 20px; }
+    .exp-row, .exp-row.right { flex-direction: column; align-items: flex-start; padding-left: 48px; }
+    .exp-dot { position: absolute; left: 14px; }
+    .exp-card { max-width: 100%; }
+    .exp-spacer { display: none; }
+    .ep-details-inner { grid-template-columns: 1fr; padding-left: 24px; }
+    .eg-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 768px) {
+    .mg-grid { grid-template-columns: repeat(3, 1fr); }
+    .eg-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 480px) {
+    .mg-grid { grid-template-columns: repeat(2, 1fr); }
+    .stage-tooltip { display: none; }
+  }
+
+  /* ── SCROLL REVEAL ────────────────────────────── */
+  .reveal {
+    opacity: 0; transform: translateY(32px);
+    transition: opacity .7s ease, transform .7s ease;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+
+  /* ── HOW SECTION — двухколоночный layout с HUD ── */
+  .how-layout {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 48px;
+    align-items: start;
+  }
+  .how-layout-left { /* текстовый контент */ }
+
+  /* ── HOW IT WORKS - ЧЕСТНЫЙ ЗНАК ─────────────── */
+  .hz-phases {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 48px;
+  }
+  .hz-phase {
+    padding: 28px 32px; background: var(--gray-800);
+    border: 1px solid rgba(255,255,255,0.06); border-radius: 8px;
+  }
+  .hz-phase-active {
+    border-color: var(--pink); background: rgba(232,0,125,0.06);
+  }
+  .hz-phase-label {
+    font-family: 'Unbounded', sans-serif; font-size: 14px;
+    font-weight: 700; color: var(--pink); margin-bottom: 12px;
+  }
+  .hz-phase-desc { font-size: 14px; line-height: 1.6; color: rgba(255,255,255,0.7); }
+  .flow-subtitle {
+    font-family: 'Unbounded', sans-serif; font-size: 18px; font-weight: 700;
+    margin-bottom: 28px; color: var(--white);
+  }
+  .chain-flow {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    background: var(--gray-800); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px; overflow: hidden;
+  }
+  .chain-step {
+    padding: 28px 20px; text-align: center;
+    border-right: 1px solid rgba(255,255,255,0.06);
+    transition: background .2s;
+    position: relative;
+  }
+  .chain-step:hover { background: rgba(232,0,125,0.06); }
+  .chain-step:last-child { border-right: none; }
+  .chain-step:not(:last-child)::after {
+    content: '→';
+    position: absolute; right: -13px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--pink); font-size: 18px; font-weight: 700;
+    z-index: 2; pointer-events: none;
+  }
+  .chain-arrow { display: none; }
+  .chain-icon { font-size: 28px; margin-bottom: 12px; }
+  .chain-text { font-size: 13px; line-height: 1.5; color: rgba(255,255,255,0.7); }
+
+  /* ── PRODUCTION PIPELINE ───────────────────────── */
+  .production { background: var(--gray-900); }
+  .prod-pipeline {
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    background: var(--gray-800); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px; overflow: hidden;
+  }
+  .prod-step {
+    flex: 1; padding: 36px 24px; text-align: center;
+    border-right: 1px solid rgba(255,255,255,0.06);
+    transition: background .25s;
+    position: relative;
+  }
+  .prod-step:last-child { border-right: none; }
+  .prod-step:hover { background: rgba(232,0,125,0.07); }
+  .prod-step:not(:last-child)::after {
+    content: '→';
+    position: absolute; right: -14px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--pink); font-size: 18px; font-weight: 900;
+    z-index: 2; pointer-events: none;
+  }
+  .prod-step-highlight { }
+  .prod-connector { display: none; }
+  .prod-icon { font-size: 36px; margin-bottom: 14px; }
+  .prod-step-name {
+    font-family: 'Unbounded', sans-serif; font-size: 13px;
+    font-weight: 700; color: var(--pink); margin-bottom: 10px;
+  }
+  .prod-step-desc { font-size: 12px; line-height: 1.5; color: rgba(255,255,255,0.6); }
+
+  /* ── VIDEO LINK ────────────────────────────────── */
+  .video-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    margin-top: 16px; padding: 8px 14px;
+    background: rgba(232,0,125,0.1); border: 1px solid rgba(232,0,125,0.25);
+    border-radius: 4px; color: var(--pink); text-decoration: none;
+    font-size: 12px; font-weight: 600; letter-spacing: 0.04em;
+    transition: all .2s;
+  }
+  .video-link:hover { background: var(--pink); color: var(--white); }
+
+  /* ── CONTACTS ──────────────────────────────────── */
+  .contacts-section { background: var(--gray-900); }
+  .contacts-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px;
+    border-radius: 8px; overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .contact-card {
+    padding: 36px 40px; background: var(--gray-800);
+    text-decoration: none; transition: background .25s;
+    border-right: 1px solid rgba(255,255,255,0.06);
+  }
+  .contact-card:last-child { border-right: none; }
+  .contact-card:hover { background: rgba(232,0,125,0.07); }
+  .contact-type {
+    font-family: 'Unbounded', sans-serif; font-size: 10px;
+    font-weight: 700; letter-spacing: 0.2em; color: rgba(255,255,255,0.4);
+    margin-bottom: 12px;
+  }
+  .contact-value {
+    font-family: 'Unbounded', sans-serif; font-size: 18px;
+    font-weight: 700; color: var(--white); line-height: 1.2;
+    transition: color .2s;
+  }
+  .contact-card:hover .contact-value { color: var(--pink); }
+
+
+
+  /* ── HAMBURGER MENU ───────────────────────────────
+     Паттерн: Overlay Nav — полноэкранное мобильное меню
+     с анимированным гамбургером
+  ─────────────────────────────────────────────────── */
+  .nav-right {
+    display: flex; align-items: center; gap: 16px;
+  }
+
+  /* Гамбургер — скрыт на десктопе */
+  .nav-burger {
+    display: none;
+    flex-direction: column; justify-content: space-between;
+    width: 28px; height: 18px;
+    background: none; border: none; cursor: pointer;
+    padding: 0; z-index: 200;
+  }
+  .nav-burger span {
+    display: block; width: 100%; height: 2px;
+    background: var(--white);
+    border-radius: 2px;
+    transform-origin: center;
+    transition: transform 0.3s cubic-bezier(0.16,1,0.3,1),
+                opacity 0.2s ease,
+                width 0.3s ease;
+  }
+  /* Открытое состояние — крест */
+  .nav-burger.open span:nth-child(1) {
+    transform: translateY(8px) rotate(45deg);
+  }
+  .nav-burger.open span:nth-child(2) {
+    opacity: 0; width: 0;
+  }
+  .nav-burger.open span:nth-child(3) {
+    transform: translateY(-8px) rotate(-45deg);
+  }
+
+  /* Мобильное меню — полноэкранный оверлей */
+  .nav-mobile {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 150;
+    background: rgba(10,10,10,0.97);
+    backdrop-filter: blur(20px);
+    display: flex; flex-direction: column;
+    align-items: flex-start; justify-content: center;
+    padding: 80px 32px 48px;
+    gap: 8px;
+    /* Скрыто по умолчанию */
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(100%);
+    transition: transform 0.4s cubic-bezier(0.16,1,0.3,1),
+                opacity 0.3s ease;
+  }
+  .nav-mobile.open {
+    opacity: 1;
+    pointer-events: all;
+    transform: translateX(0);
+  }
+
+  .nav-mobile-link {
+    font-family: 'Unbounded', sans-serif;
+    font-size: clamp(20px, 5vw, 32px);
+    font-weight: 700;
+    color: rgba(255,255,255,0.5);
+    text-decoration: none;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    padding: 10px 0;
+    transition: color 0.2s ease;
+    /* Stagger reveal при открытии */
+    opacity: 0;
+    transform: translateX(20px);
+    transition: color 0.2s, opacity 0.4s ease, transform 0.4s cubic-bezier(0.16,1,0.3,1);
+  }
+  .nav-mobile.open .nav-mobile-link {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  /* Stagger delays */
+  .nav-mobile.open .nav-mobile-link:nth-child(1) { transition-delay: 0.05s; }
+  .nav-mobile.open .nav-mobile-link:nth-child(2) { transition-delay: 0.10s; }
+  .nav-mobile.open .nav-mobile-link:nth-child(3) { transition-delay: 0.15s; }
+  .nav-mobile.open .nav-mobile-link:nth-child(4) { transition-delay: 0.20s; }
+  .nav-mobile.open .nav-mobile-link:nth-child(5) { transition-delay: 0.25s; }
+  .nav-mobile.open .nav-mobile-link:nth-child(6) { transition-delay: 0.30s; }
+  .nav-mobile.open .nav-mobile-link:nth-child(7) { transition-delay: 0.35s; }
+  .nav-mobile.open .nav-mobile-link:nth-child(8) { transition-delay: 0.40s; }
+
+  .nav-mobile-link:hover { color: var(--pink); }
+
+  /* CTA в мобильном меню */
+  .nav-mobile-cta {
+    margin-top: 24px;
+    color: var(--pink) !important;
+    font-size: clamp(14px, 3.5vw, 18px) !important;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding-top: 24px !important;
+    width: 100%;
+  }
+
+  /* ══════════════════════════════════════════════════
+     МОБИЛЬНАЯ АДАПТАЦИЯ
+     Брейкпоинты:
+     1024px — планшет landscape / небольшой десктоп
+      768px — планшет portrait
+      480px — смартфон
+  ══════════════════════════════════════════════════ */
+
+  /* ── ПЛАНШЕТ: 1024px ─────────────────────────── */
+  @media (max-width: 1024px) {
+
+    /* NAV */
+    nav { padding: 16px 24px; }
+    nav ul { display: none; }         /* скрываем десктопное меню */
+    .nav-cta { display: none; }       /* скрываем CTA-кнопку в nav */
+    .nav-burger { display: flex; }    /* показываем гамбургер */
+
+    /* HERO */
+    .hero {
+      padding: 88px 24px 60px !important;
+      min-height: 100vh;
+    }
+    .hero-content { max-width: 100%; }
+    .hero-h1-split { font-size: clamp(32px, 6vw, 56px); }
+    .hero-stats { gap: 24px; flex-wrap: wrap; }
+
+    /* HOW LAYOUT — убираем HUD панель рядом, стакаем */
+    .how-layout {
+      grid-template-columns: 1fr !important;
+      gap: 40px;
+    }
+    .hero-monitor { max-height: 420px; }
+
+    /* ABOUT */
+    .about-grid { grid-template-columns: 1fr; gap: 40px; }
+    .about-nums { grid-template-columns: 1fr 1fr; }
+
+    /* FLOW STEPS — 2 колонки */
+    .flow-steps { grid-template-columns: repeat(2, 1fr); }
+    .flow-step::after { display: none; }
+
+    /* STAGES — 3 колонки */
+    .stages-grid { grid-template-columns: repeat(3, 1fr); }
+
+    /* SOLUTIONS, AGG, PRINT — 2 колонки */
+    .solutions-grid { grid-template-columns: repeat(2, 1fr); }
+    .agg-grid { grid-template-columns: repeat(2, 1fr); }
+    .print-grid { grid-template-columns: repeat(2, 1fr); }
+
+    /* ADVANTAGES, CASES — 2 колонки */
+    .adv-grid { grid-template-columns: repeat(2, 1fr); }
+    .cases-grid { grid-template-columns: repeat(2, 1fr); }
+
+    /* RISKS */
+    .risks-layout { grid-template-columns: 1fr; gap: 24px; }
+
+    /* PRODUCTION PIPELINE — вертикально */
+    .prod-pipeline { grid-template-columns: 1fr 1fr; }
+    .prod-step:not(:last-child)::after { display: none; }
+    .prod-step { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .prod-step:nth-child(even) { border-right: none; }
+
+    /* CHAIN FLOW — вертикально */
+    .chain-flow { grid-template-columns: 1fr; }
+    .chain-step { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .chain-step:not(:last-child)::after {
+      content: '↓';
+      right: auto; top: auto; bottom: -14px; left: 50%;
+      transform: translateX(-50%);
+    }
+
+    /* HZ PHASES */
+    .hz-phases { grid-template-columns: 1fr; }
+
+    /* APP TYPES */
+    .apptypes-grid { grid-template-columns: 1fr; }
+
+    /* SERIAL */
+    .serial-grid { grid-template-columns: 1fr 1fr; }
+
+    /* APPTYPES */
+    .apptypes-grid { grid-template-columns: 1fr; gap: 16px; }
+
+    /* CASE DETAIL */
+    .case-detail-layout { grid-template-columns: 1fr; gap: 32px; }
+    .case-photos-grid { grid-template-columns: 1fr 1fr; }
+
+    /* WORDCLOUD */
+    .wc-xl { font-size: clamp(28px, 5vw, 48px); }
+    .wc-lg { font-size: clamp(20px, 3.5vw, 36px); }
+
+    /* CONTACT VALUE — уменьшаем */
+    .contact-value { font-size: 16px; }
+
+    /* CONTACTS */
+    .contacts-grid { grid-template-columns: 1fr; }
+    .contact-card { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    /* ARCHITECTURE */
+    .arch-layers { max-width: 100%; }
+    .arch-ldesc { font-size: 11px; }
+
+    /* FOOTER */
+    footer { flex-direction: column; gap: 12px; text-align: center; }
+
+    /* SECTION padding */
+    section { padding: 80px 24px; }
+    .hero { padding: 100px 24px 60px !important; }
+    .cta { padding: 80px 24px; }
+  }
+
+  /* ── ПЛАНШЕТ PORTRAIT: 768px ──────────────────── */
+  @media (max-width: 768px) {
+
+    /* NAV */
+    nav { padding: 14px 20px; }
+
+    /* HERO */
+    .hero { padding: 80px 20px 48px !important; }
+    .hero-h1-split { letter-spacing: -0.02em; }
+    .hero-sub { font-size: 16px; }
+    .hero-stats {
+      gap: 20px 32px;
+      padding-top: 32px;
+      margin-top: 48px;
+    }
+    .stat-num { font-size: 32px; }
+    .stat-label { font-size: 12px; }
+    .hero-cta { flex-direction: column; gap: 12px; }
+    .hero-cta .btn-primary,
+    .hero-cta .btn-ghost { width: 100%; text-align: center; justify-content: center; }
+
+    /* BADGE */
+    .hero-badge { font-size: 10px; }
+
+    /* ABOUT NUMS — 2×2 */
+    .about-nums { grid-template-columns: 1fr 1fr; }
+    .num-big { font-size: 36px; }
+
+    /* SOLUTIONS — 1 колонка */
+    .solutions-grid { grid-template-columns: 1fr; }
+
+    /* STAGES — 2 колонки */
+    .stages-grid { grid-template-columns: repeat(2, 1fr); }
+
+    /* PRINT — 1 колонка */
+    .print-grid { grid-template-columns: 1fr; }
+
+    /* AGGREGATION — 1 колонка */
+    .agg-grid { grid-template-columns: 1fr; }
+
+    /* SERIAL — 1 колонка */
+    .serial-grid { grid-template-columns: 1fr; }
+
+    /* PRODUCTION PIPELINE — 1 колонка */
+    .prod-pipeline { grid-template-columns: 1fr; }
+    .prod-step { border-right: none !important; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .prod-step:not(:last-child)::after {
+      content: '↓';
+      right: auto; top: auto; bottom: -14px; left: 50%;
+      transform: translateX(-50%);
+      display: block;
+    }
+
+    /* ADVANTAGES — 1 колонка */
+    .adv-grid { grid-template-columns: 1fr; }
+
+    /* CASES — 1 колонка */
+    .cases-grid { grid-template-columns: 1fr; }
+
+    /* ARCH */
+    .arch-layer { flex-wrap: wrap; gap: 8px; padding: 14px 20px; }
+    .arch-ldesc { margin-left: 0; text-align: left; font-size: 11px; }
+
+    /* CTA */
+    .cta-btns { flex-direction: column; align-items: center; gap: 12px; }
+    .cta-btns .btn-primary,
+    .cta-btns .btn-ghost { width: 100%; max-width: 320px; justify-content: center; }
+    .contact-info { font-size: 13px; }
+
+    /* SERIAL — 1 колонка */
+    .serial-grid { grid-template-columns: 1fr; }
+
+    /* CASE DETAIL — стакаем */
+    .case-photos-grid,
+    .case-photos-grid--3 { grid-template-columns: 1fr 1fr; gap: 4px; }
+    .case-photo--wide { aspect-ratio: 16/9; }
+
+    /* MONITOR — уменьшаем */
+    .hero-monitor { max-height: 380px; }
+
+    /* SECTION */
+    section { padding: 64px 20px; }
+    h2 { font-size: clamp(24px, 5vw, 40px); }
+  }
+
+  /* ── APPTYPES GRID — базовые стили ──────────────── */
+  .apptypes-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+  }
+  .apptype-col {
+    background: var(--gray-800); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px; overflow: hidden;
+  }
+  .apptype-header {
+    font-family: 'Unbounded', sans-serif; font-size: 14px;
+    font-weight: 700; padding: 20px 24px;
+    background: var(--pink); color: var(--white);
+  }
+  .apptype-body { padding: 24px; }
+  .apptype-points { list-style: none; margin-bottom: 20px; }
+  .apptype-points li {
+    font-size: 14px; line-height: 1.6; color: rgba(255,255,255,0.75);
+    margin-bottom: 10px; padding-left: 16px; position: relative;
+  }
+  .apptype-points li::before {
+    content: '→'; position: absolute; left: 0; color: var(--pink); font-size: 12px;
+  }
+  .apptype-equip-title {
+    font-family: 'Unbounded', sans-serif; font-size: 9px;
+    font-weight: 700; letter-spacing: 0.15em; color: rgba(255,255,255,0.35);
+    margin-bottom: 10px;
+  }
+  .apptype-equip { list-style: none; }
+  .apptype-equip li {
+    font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 6px;
+    padding-left: 14px; position: relative;
+  }
+  .apptype-equip li::before {
+    content: '·'; position: absolute; left: 0; color: var(--pink);
+  }
+
+  /* ── SERIAL GRID — базовые стили ──────────────── */
+  .serial-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+  }
+  .serial-card {
+    background: var(--gray-800); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px; padding: 32px;
+  }
+  .serial-num {
+    font-family: 'Unbounded', sans-serif; font-size: 40px;
+    font-weight: 900; color: rgba(232,0,125,0.2); line-height: 1; margin-bottom: 12px;
+  }
+  .serial-title {
+    font-family: 'Unbounded', sans-serif; font-size: 14px;
+    font-weight: 700; color: var(--pink); margin-bottom: 12px; line-height: 1.3;
+  }
+  .serial-desc { font-size: 14px; line-height: 1.6; color: rgba(255,255,255,0.65); margin-bottom: 20px; }
+  .serial-step {
+    display: flex; gap: 10px; align-items: flex-start; margin-bottom: 8px;
+  }
+  .serial-step-dot {
+    width: 5px; height: 5px; border-radius: 50%; background: var(--pink);
+    flex-shrink: 0; margin-top: 8px;
+  }
+  .serial-step span { font-size: 12px; line-height: 1.5; color: rgba(255,255,255,0.5); }
+
+  /* ── CASE DETAIL — базовые стили ───────────────── */
+  .case-detail { background: var(--gray-900); }
+  .case-detail-layout {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start;
+  }
+  .case-detail-block { margin-bottom: 28px; }
+  .case-detail-block-title {
+    font-family: 'Unbounded', sans-serif; font-size: 9px;
+    font-weight: 700; letter-spacing: 0.15em; color: rgba(255,255,255,0.35);
+    margin-bottom: 12px;
+  }
+  .case-detail-points { list-style: none; }
+  .case-detail-points li {
+    font-size: 14px; line-height: 1.6; color: rgba(255,255,255,0.75);
+    margin-bottom: 10px; padding-left: 18px; position: relative;
+  }
+  .case-detail-points li::before {
+    content: '—'; position: absolute; left: 0; color: var(--pink); font-size: 12px;
+  }
+  .case-detail-result {
+    margin-top: 20px; padding: 16px 20px;
+    background: rgba(232,0,125,0.07); border: 1px solid rgba(232,0,125,0.2);
+    border-radius: 6px; font-size: 13px; line-height: 1.6; color: rgba(255,255,255,0.8);
+  }
+  .case-photos-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
+  }
+  .case-photos-grid--3 {
+    grid-template-columns: 1fr 1fr;
+  }
+  .case-photo {
+    background: var(--gray-700); border-radius: 4px; overflow: hidden;
+    aspect-ratio: 4/3;
+  }
+  .case-photo img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+  }
+  .case-photo--wide {
+    grid-column: 1 / -1; aspect-ratio: 16/7;
+  }
+
+  /* ── HERO MONITOR — базовые стили ──────────────── */
+  .hero-monitor {
+    background: var(--gray-800); border: 1px solid rgba(232,0,125,0.2);
+    border-radius: 8px; overflow: hidden;
+  }
+  .monitor-header {
+    background: var(--gray-700); padding: 12px 16px;
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .monitor-title {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--pink); font-weight: 500;
+  }
+  .monitor-dots { display: flex; gap: 6px; }
+  .monitor-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+  }
+  .monitor-body { padding: 16px; }
+
+  /* Terminal log */
+  .terminal-log { margin-bottom: 16px; }
+  .log-line { display: flex; gap: 8px; margin-bottom: 6px; font-family: 'JetBrains Mono', monospace; font-size: 10px; line-height: 1.4; }
+  .log-time { color: rgba(255,255,255,0.3); }
+  .log-ok { color: #4ade80; }
+  .log-info { color: #60a5fa; }
+  .log-warn { color: #fbbf24; }
+  .log-msg { color: rgba(255,255,255,0.7); }
+
+  /* DataMatrix visual */
+  .dm-visual { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 4px; }
+  .dm-code { display: grid; grid-template-columns: repeat(8, 12px); gap: 1px; }
+  .dm-cell { width: 12px; height: 12px; background: var(--pink); border-radius: 1px; }
+  .dm-cell.empty { background: transparent; }
+  @keyframes dmFlicker { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .dm-label { font-family: 'Unbounded', sans-serif; font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.5); letter-spacing: 0.1em; }
+  .dm-code-text { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--pink); margin-top: 4px; word-break: break-all; }
+
+  /* Production lines progress */
+  .prod-lines { display: flex; flex-direction: column; gap: 10px; }
+  .prod-line-item {}
+  .prod-line-header { display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.5); margin-bottom: 4px; }
+  .prod-line-val { color: var(--pink); font-weight: 700; }
+  .prod-line-bar { height: 3px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
+  .prod-line-fill { height: 100%; background: var(--pink); border-radius: 2px; }
+
+  /* ── WORDCLOUD — базовые стили ──────────────────── */
+  .wordcloud {
+    display: flex; flex-wrap: wrap; gap: 12px 20px;
+    align-items: center; justify-content: center;
+    padding: 40px 0;
+  }
+  .wc-word {
+    font-family: 'Unbounded', sans-serif; font-weight: 900;
+    color: rgba(255,255,255,0.15); letter-spacing: -0.02em;
+    line-height: 1; cursor: default; user-select: none;
+    animation: wcFloat 6s ease-in-out infinite;
+    transition: color .3s;
+  }
+  .wc-word:hover { color: rgba(255,255,255,0.6); }
+  .wc-pink { color: rgba(232,0,125,0.4); }
+  .wc-pink:hover { color: var(--pink); }
+  .wc-xl { font-size: clamp(36px, 6vw, 64px); }
+  .wc-lg { font-size: clamp(24px, 4vw, 44px); }
+  .wc-md { font-size: clamp(18px, 3vw, 32px); }
+  .wc-sm { font-size: clamp(14px, 2vw, 22px); }
+  @keyframes wcFloat {
+    0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)}
+  }
+
+  /* ── СМАРТФОН: 480px ──────────────────────────── */
+  @media (max-width: 480px) {
+
+    /* NAV */
+    nav { padding: 12px 16px; }
+    .logo { font-size: 11px; }
+
+    /* HERO */
+    .hero { padding: 72px 16px 48px !important; }
+    .hero-badge { display: none; } /* экономим место */
+    .hero-stats { grid-template-columns: 1fr 1fr; display: grid; gap: 0; }
+    .hero-stats > div {
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .stat-num { font-size: 28px; }
+
+    /* ABOUT */
+    .about-nums { grid-template-columns: 1fr 1fr; gap: 2px; }
+    .num-card { padding: 20px; }
+    .num-big { font-size: 30px; }
+
+    /* STAGES — 2 колонки */
+    .stages-grid { grid-template-columns: repeat(2, 1fr); }
+    .stage-n { width: 28px; height: 28px; font-size: 11px; }
+
+    /* FLOW STEPS — 1 колонка */
+    .flow-steps { grid-template-columns: 1fr; }
+
+    /* WORDCLOUD — чуть меньше шрифты */
+    .wc-xl { font-size: clamp(28px, 7vw, 48px); }
+    .wc-lg { font-size: clamp(20px, 5vw, 36px); }
+    .wc-md { font-size: clamp(15px, 4vw, 24px); }
+    .wc-sm { font-size: clamp(12px, 3vw, 18px); }
+
+    /* SERIAL — 1 колонка, компактно */
+    .serial-num { font-size: 28px; }
+
+    /* CASE PHOTOS — 1 колонка */
+    .case-photos-grid { grid-template-columns: 1fr; }
+    .case-photo--wide { aspect-ratio: 16/9; }
+
+    /* APPTYPES — уменьшаем паддинг */
+    .apptype-body { padding: 16px; }
+
+    /* ARCHITECTURE — компактно */
+    .arch-layer { padding: 12px 16px; }
+    .arch-lname { font-size: 12px; }
+    .arch-ldesc { font-size: 10px; }
+
+    /* SECTION PADDING */
+    section { padding: 48px 16px; }
+    h2 { font-size: clamp(22px, 6vw, 36px); }
+    .section-intro { font-size: 15px; margin-bottom: 40px; }
+
+    /* MONITOR HUD — скрываем на телефоне (слишком компактно) */
+    .hero-monitor { display: none; }
+
+    /* PRINT CARDS */
+    .print-num { font-size: 36px; }
+
+    /* CONTACT CARDS */
+    .contact-value { font-size: 15px; }
+
+    /* FOOTER */
+    footer { padding: 24px 16px; font-size: 12px; }
+  }
+
+  /* ══════════════════════════════════════════════════
+     ДОСТУПНОСТЬ: Уважаем настройку "Уменьшить движение"
+     Паттерн: prefers-reduced-motion — стандарт a11y
+     Пользователи с вестибулярными нарушениями скажут спасибо
+  ══════════════════════════════════════════════════ */
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .hero-badge, h1, .hero-sub, .hero-cta, .hero-stats {
+      animation: none !important;
+    }
+    /* hero-line — сразу показываем без анимации */
+    .hero-line-inner {
+      transform: none !important;
+      opacity: 1 !important;
+      animation: none !important;
+    }
+    @keyframes fadeUp  { from { opacity: 1; transform: none; } }
+    @keyframes pulse   { from { opacity: 1; transform: none; } }
+    @keyframes wcFloat { from { transform: none; } }
+    .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+  }
+
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">первый<span>бит</span></div>
+  <ul>
+    <li><a href="#about">О компании</a></li>
+    <li><a href="#how">Как работает</a></li>
+    <li><a href="#mandatory">Маркировка</a></li>
+    <li><a href="#experiment">Эксперимент</a></li>
+    <li><a href="#production">Производство</a></li>
+    <li><a href="#solutions">Решения</a></li>
+    <li><a href="#apptypes">Нанесение</a></li>
+    <li><a href="#case1">Кейсы</a></li>
+    <li><a href="#advantages">Преимущества</a></li>
+    <li><a href="#contacts">Контакты</a></li>
+  </ul>
+  <div class="nav-right">
+    <a href="#contacts" class="btn-primary nav-cta" style="padding:10px 20px;font-size:11px">Связаться</a>
+    <button class="nav-burger" id="navBurger" aria-label="Меню">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- Мобильное меню -->
+<div class="nav-mobile" id="navMobile">
+  <a href="#about" class="nav-mobile-link">О компании</a>
+  <a href="#how" class="nav-mobile-link">Как работает</a>
+  <a href="#mandatory" class="nav-mobile-link">Маркировка</a>
+  <a href="#experiment" class="nav-mobile-link">Эксперимент</a>
+  <a href="#production" class="nav-mobile-link">Производство</a>
+  <a href="#solutions" class="nav-mobile-link">Решения</a>
+  <a href="#apptypes" class="nav-mobile-link">Нанесение</a>
+  <a href="#case1" class="nav-mobile-link">Кейсы</a>
+  <a href="#advantages" class="nav-mobile-link">Преимущества</a>
+  <a href="#contacts" class="nav-mobile-link nav-mobile-cta">Связаться с нами →</a>
+</div>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-badge">Честный Знак · Промышленная маркировка</div>
+    <h1 class="hero-h1-split">
+  <span class="hero-line-wrap"><span class="hero-line-inner l1">Промышленная</span></span>
+  <span class="hero-line-wrap"><span class="hero-line-inner l2">маркировка</span></span>
+  <span class="hero-line-wrap"><span class="hero-line-inner l3">с <em>Первым Битом</em></span></span>
+</h1>
+    <p class="hero-sub">Комплексное внедрение маркировки на производстве — от заказа кодов и нанесения до складской логистики и отправки УПД по ЭДО.</p>
+    <div class="hero-cta">
+      <a href="#solutions" class="btn-primary">Посмотреть решения →</a>
+      <a href="#cta" class="btn-ghost">Получить консультацию</a>
+    </div>
+    <div class="hero-stats">
+      <div>
+        <div class="stat-num">600+</div>
+        <div class="stat-label">производственных линий</div>
+      </div>
+      <div>
+        <div class="stat-num">1200+</div>
+        <div class="stat-label">станций сериализации</div>
+      </div>
+      <div>
+        <div class="stat-num">4 млн</div>
+        <div class="stat-label">кодов в месяц</div>
+      </div>
+      <div>
+        <div class="stat-num">28+</div>
+        <div class="stat-label">лет на рынке IT</div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- ABOUT -->
+<section class="about reveal" id="about">
+  <div class="section-label">О компании</div>
+  <div class="about-grid">
+    <div class="about-text">
+      <h2>Первый Бит — лидер автоматизации производства</h2>
+      <p>Наши клиенты — крупные корпоративные заказчики и представители среднего бизнеса из различных отраслей. За 28 лет мы <strong>успешно реализовали тысячи проектов</strong> для российских и международных компаний, в том числе имеющих территориально-распределённую структуру.</p>
+      <p><strong>Индивидуальная проработка</strong> при формировании технического решения и <strong>мультиязычная команда</strong> из более 9 500 специалистов — от Руководителей проектов до Разработчиков.</p>
+      <a href="#cta" class="btn-primary" style="margin-top:8px">Узнать больше →</a>
+    </div>
+    <div class="about-nums">
+      <div class="num-card">
+        <div class="num-big">28+</div>
+        <div class="num-desc">лет на рынке IT</div>
+      </div>
+      <div class="num-card">
+        <div class="num-big">70+</div>
+        <div class="num-desc">вендоров IT-решений и оборудования</div>
+      </div>
+      <div class="num-card">
+        <div class="num-big">9 500+</div>
+        <div class="num-desc">сотрудников</div>
+      </div>
+      <div class="num-card">
+        <div class="num-big">300К+</div>
+        <div class="num-desc">постоянных клиентов</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how reveal" id="how">
+  <div class="how-layout">
+    <div class="how-layout-left">
+      <div class="section-label">Система Честный ЗНАК</div>
+      <h2>Маркировка в системе<br>Честный ЗНАК</h2>
+      <p class="section-intro"><strong style="color:var(--white)">Код маркировки</strong> — обязательный уникальный цифровой код DataMatrix, который наносится на товары и позволяет отслеживать их путь от производителя до конечного потребителя.</p>
+
+      <div class="hz-phases">
+    <div class="hz-phase">
+      <div class="hz-phase-label">В пилоте</div>
+      <div class="hz-phase-desc">Участие необязательное. Время для настройки оборудования, ЦРПТ выдаёт коды бесплатно.</div>
+    </div>
+    <div class="hz-phase hz-phase-active">
+      <div class="hz-phase-label">Обязательная</div>
+      <div class="hz-phase-desc">Настройка товароучётной системы, маркировка остатков и новых партий товара. Итог — запрет продажи немаркированных товаров.</div>
+    </div>
+  </div>
+
+      <h3 class="flow-subtitle">Как работает маркировка</h3>
+      <div class="chain-flow">
+    <div class="chain-step">
+      <div class="chain-icon"><svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="18" width="28" height="12" rx="1" stroke="#E8007D" stroke-width="1.5"/><rect x="6" y="12" width="8" height="6" stroke="#E8007D" stroke-width="1.5"/><rect x="18" y="12" width="8" height="6" stroke="#E8007D" stroke-width="1.5"/><path d="M2 18L8 12" stroke="#E8007D" stroke-width="1.5"/><path d="M12 18V12M20 18V12" stroke="#E8007D" stroke-width="1.5"/><path d="M30 18L26 12" stroke="#E8007D" stroke-width="1.5"/><rect x="13" y="22" width="6" height="8" stroke="#E8007D" stroke-width="1.5"/></svg></div>
+      <div class="chain-text">Производитель / импортёр наносит код на каждую единицу товара</div>
+    </div>
+    <div class="chain-arrow">→</div>
+    <div class="chain-step">
+      <div class="chain-icon"><svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="10" width="18" height="14" rx="1" stroke="#E8007D" stroke-width="1.5"/><path d="M20 14H26L30 20V24H20V14Z" stroke="#E8007D" stroke-width="1.5" stroke-linejoin="round"/><circle cx="8" cy="26" r="2.5" stroke="#E8007D" stroke-width="1.5"/><circle cx="24" cy="26" r="2.5" stroke="#E8007D" stroke-width="1.5"/><path d="M2 20H18" stroke="#E8007D" stroke-width="1.5"/></svg></div>
+      <div class="chain-text">Путь товара фиксируется на каждом этапе передачи</div>
+    </div>
+    <div class="chain-arrow">→</div>
+    <div class="chain-step">
+      <div class="chain-icon"><svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 14V28H28V14" stroke="#E8007D" stroke-width="1.5" stroke-linejoin="round"/><path d="M2 8H30L28 14H4L2 8Z" stroke="#E8007D" stroke-width="1.5" stroke-linejoin="round"/><rect x="12" y="18" width="8" height="10" stroke="#E8007D" stroke-width="1.5"/><path d="M6 4H26" stroke="#E8007D" stroke-width="1.5"/></svg></div>
+      <div class="chain-text">В магазине сканируют код товара и размещают его на полке</div>
+    </div>
+    <div class="chain-arrow">→</div>
+    <div class="chain-step">
+      <div class="chain-icon"><svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 4H6L10 22H26L30 10H8" stroke="#E8007D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="13" cy="27" r="2" stroke="#E8007D" stroke-width="1.5"/><circle cx="23" cy="27" r="2" stroke="#E8007D" stroke-width="1.5"/></svg></div>
+      <div class="chain-text">Товар продают на кассе, после чего «код выходит из оборота»</div>
+    </div>
+      </div><!-- /chain-flow -->
+    </div><!-- /how-layout-left -->
+
+    <!-- HUD Monitor Panel — паттерн Command Center -->
+    <div class="hero-monitor">
+      <div class="monitor-header">
+        <div class="monitor-title">БИТ.Маркировка / v4.2.1</div>
+        <div class="monitor-dots">
+          <div class="monitor-dot"></div>
+          <div class="monitor-dot"></div>
+          <div class="monitor-dot"></div>
+        </div>
+      </div>
+
+      <div class="monitor-body">
+        <!-- Терминальный лог -->
+        <div class="terminal-log">
+          <div class="log-line">
+            <span class="log-time">09:14:32</span>
+            <span class="log-ok">[OK]</span>
+            <span class="log-msg">Подключение к ГИС МТ — активно</span>
+          </div>
+          <div class="log-line">
+            <span class="log-time">09:14:33</span>
+            <span class="log-ok">[OK]</span>
+            <span class="log-msg">Сессия СУЗ инициализирована</span>
+          </div>
+          <div class="log-line">
+            <span class="log-time">09:14:35</span>
+            <span class="log-info">[INF]</span>
+            <span class="log-msg">Загрузка кодов: 4 800 шт</span>
+          </div>
+          <div class="log-line">
+            <span class="log-time">09:14:37</span>
+            <span class="log-ok">[OK]</span>
+            <span class="log-msg">Принтер Zebra ZT420 — online</span>
+          </div>
+          <div class="log-line">
+            <span class="log-time">09:14:40</span>
+            <span class="log-ok">[OK]</span>
+            <span class="log-msg">Сканер Datalogic — откалиброван</span>
+          </div>
+          <div class="log-line">
+            <span class="log-time">09:14:44</span>
+            <span class="log-ok">[OK]</span>
+            <span class="log-msg">1С:УТ подключена, синхронизация</span>
+          </div>
+          <div class="log-line">
+            <span class="log-time">09:14:48</span>
+            <span class="log-warn">[WRN]</span>
+            <span class="log-msg">Буфер кодов &lt; 500 шт — пополнить</span>
+          </div>
+          <div class="log-line">
+            <span class="log-time">09:14:50</span>
+            <span class="log-ok">[OK]</span>
+            <span class="log-msg">Линия 3 — запуск маркировки</span>
+          </div>
+        </div>
+
+        <!-- DataMatrix код -->
+        <div class="dm-visual">
+          <div class="dm-code" id="dmCode"></div>
+          <div class="dm-info">
+            <div class="dm-label">DataMatrix код</div>
+            <div class="dm-code-text">0104600074926&shy;4002181YF1G&shy;QOM91EE06</div>
+          </div>
+        </div>
+
+        <!-- Прогресс производственных линий -->
+        <div class="prod-lines">
+          <div class="prod-line-item">
+            <div class="prod-line-header">
+              <span>Линия 1 — Термотранс.</span>
+              <span class="prod-line-val">94%</span>
+            </div>
+            <div class="prod-line-bar">
+              <div class="prod-line-fill" style="width:94%"></div>
+            </div>
+          </div>
+          <div class="prod-line-item">
+            <div class="prod-line-header">
+              <span>Линия 2 — Пьезоструйная</span>
+              <span class="prod-line-val">78%</span>
+            </div>
+            <div class="prod-line-bar">
+              <div class="prod-line-fill" style="width:78%"></div>
+            </div>
+          </div>
+          <div class="prod-line-item">
+            <div class="prod-line-header">
+              <span>Линия 3 — Лазерная</span>
+              <span class="prod-line-val">88%</span>
+            </div>
+            <div class="prod-line-bar">
+              <div class="prod-line-fill" style="width:88%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /hero-monitor -->
+
+  </div><!-- /how-layout -->
+</section>
+
+<!-- MANDATORY GOODS -->
+<section class="mandatory-goods reveal" id="mandatory">
+  <div class="section-label">Обязательная маркировка</div>
+  <h2>Товары с обязательной маркировкой</h2>
+  <p class="section-intro">Полный перечень категорий, для которых маркировка в системе Честный ЗНАК уже обязательна.</p>
+  <div class="mg-grid">
+    <div class="mg-item"><div class="mg-icon">🍺</div><div class="mg-name">Пиво и слабоалкогольные напитки</div></div>
+    <div class="mg-item"><div class="mg-icon">🥛</div><div class="mg-name">Молочная продукция</div></div>
+    <div class="mg-item"><div class="mg-icon">💧</div><div class="mg-name">Упакованная вода</div></div>
+    <div class="mg-item"><div class="mg-icon">💊</div><div class="mg-name">Лекарства</div></div>
+    <div class="mg-item"><div class="mg-icon">🚬</div><div class="mg-name">Табак</div></div>
+    <div class="mg-item"><div class="mg-icon">👕</div><div class="mg-name">Товары лёгкой промышленности</div></div>
+    <div class="mg-item"><div class="mg-icon">👟</div><div class="mg-name">Обувь</div></div>
+    <div class="mg-item"><div class="mg-icon">🧪</div><div class="mg-name">Фармацевтическое сырьё</div></div>
+    <div class="mg-item"><div class="mg-icon">🧥</div><div class="mg-name">Шубы</div></div>
+    <div class="mg-item"><div class="mg-icon">🌸</div><div class="mg-name">Духи и туалетная вода</div></div>
+    <div class="mg-item"><div class="mg-icon">🦐</div><div class="mg-name">Морепродукты (икра)</div></div>
+    <div class="mg-item"><div class="mg-icon">♿</div><div class="mg-name">Технические средства реабилитации</div></div>
+    <div class="mg-item"><div class="mg-icon">💉</div><div class="mg-name">Ветеринарные препараты</div></div>
+    <div class="mg-item"><div class="mg-icon">🫒</div><div class="mg-name">Растительные масла</div></div>
+    <div class="mg-item"><div class="mg-icon">🐾</div><div class="mg-name">Корма для животных</div></div>
+    <div class="mg-item"><div class="mg-icon">🧱</div><div class="mg-name">Строительные материалы</div></div>
+    <div class="mg-item"><div class="mg-icon">🧴</div><div class="mg-name">Парфюмерно-косметическая продукция и бытовая химия</div><div class="mg-date">с 1.03.2025</div></div>
+    <div class="mg-item"><div class="mg-icon">🥫</div><div class="mg-name">Консервированные продукты</div></div>
+    <div class="mg-item"><div class="mg-icon">🛞</div><div class="mg-name">Шины и покрышки</div></div>
+    <div class="mg-item"><div class="mg-icon">🍚</div><div class="mg-name">Бакалея</div><div class="mg-date">с 1.03.2025</div></div>
+    <div class="mg-item"><div class="mg-icon">🛢</div><div class="mg-name">Моторные масла</div></div>
+    <div class="mg-item"><div class="mg-icon">📷</div><div class="mg-name">Фотоаппараты и лампы-вспышки</div><div class="mg-date">с 1.03.2025</div></div>
+    <div class="mg-item"><div class="mg-icon">🩺</div><div class="mg-name">Медицинские изделия</div></div>
+    <div class="mg-item"><div class="mg-icon">🍬</div><div class="mg-name">Сладости</div></div>
+    <div class="mg-item"><div class="mg-icon">🚲</div><div class="mg-name">Велосипеды</div></div>
+    <div class="mg-item"><div class="mg-icon">💊</div><div class="mg-name">БАД</div></div>
+    <div class="mg-item"><div class="mg-icon">🧹</div><div class="mg-name">Антисептики и дезинфицирующие средства</div></div>
+    <div class="mg-item"><div class="mg-icon">♿</div><div class="mg-name">Кресла-коляски</div></div>
+    <div class="mg-item"><div class="mg-icon">🥤</div><div class="mg-name">Безалкогольные напитки</div></div>
+    <div class="mg-item"><div class="mg-icon">🍺</div><div class="mg-name">Безалкогольное пиво</div></div>
+    <div class="mg-item"><div class="mg-icon">🧸</div><div class="mg-name">Детские игрушки</div></div>
+    <div class="mg-item"><div class="mg-icon">🏋️</div><div class="mg-name">Спортивное питание</div></div>
+  </div>
+</section>
+
+<!-- EXPERIMENT ROADMAP -->
+<section class="experiment reveal" id="experiment">
+  <div class="section-label">Товары в эксперименте</div>
+  <h2>Дорожная карта экспериментов</h2>
+  <p class="section-intro">Категории товаров, находящиеся в стадии пилотного тестирования маркировки. Участие пока необязательно.</p>
+  <div class="exp-timeline">
+    <div class="exp-row">
+      <div class="exp-card done">
+        <div class="exp-card-name">Титановая металлопродукция</div>
+        <div class="exp-card-date">01.09.2023 — 31.03.2024 · завершён</div>
+      </div>
+      <div class="exp-dot done"></div>
+      <div class="exp-spacer"></div>
+    </div>
+    <div class="exp-row right">
+      <div class="exp-spacer"></div>
+      <div class="exp-dot"></div>
+      <div class="exp-card">
+        <div class="exp-card-name">Радиоэлектроника</div>
+        <div class="exp-card-date">01.12.2023 — 28.02.2026</div>
+      </div>
+    </div>
+    <div class="exp-row">
+      <div class="exp-card">
+        <div class="exp-card-name">Оптоволокно</div>
+        <div class="exp-card-date">01.12.2023 — 28.02.2026</div>
+      </div>
+      <div class="exp-dot"></div>
+      <div class="exp-spacer"></div>
+    </div>
+    <div class="exp-row right">
+      <div class="exp-spacer"></div>
+      <div class="exp-dot done"></div>
+      <div class="exp-card done">
+        <div class="exp-card-name">Печатная продукция</div>
+        <div class="exp-card-date">01.04.2024 — 31.08.2025 · завершён</div>
+      </div>
+    </div>
+    <div class="exp-row">
+      <div class="exp-card">
+        <div class="exp-card-name">Отопительные приборы</div>
+        <div class="exp-card-date">01.04.2024 — 28.02.2026</div>
+      </div>
+      <div class="exp-dot"></div>
+      <div class="exp-spacer"></div>
+    </div>
+    <div class="exp-row right">
+      <div class="exp-spacer"></div>
+      <div class="exp-dot"></div>
+      <div class="exp-card">
+        <div class="exp-card-name">Кабельная продукция</div>
+        <div class="exp-card-date">20.05.2024 — 28.02.2026</div>
+      </div>
+    </div>
+    <div class="exp-row">
+      <div class="exp-card">
+        <div class="exp-card-name">Слабый алкоголь</div>
+        <div class="exp-card-date">01.07.2024 — 31.08.2026</div>
+      </div>
+      <div class="exp-dot"></div>
+      <div class="exp-spacer"></div>
+    </div>
+    <div class="exp-row right">
+      <div class="exp-spacer"></div>
+      <div class="exp-dot"></div>
+      <div class="exp-card">
+        <div class="exp-card-name">Медицинские изделия 2.0</div>
+        <div class="exp-card-date">01.09.2024 — 28.02.2026</div>
+      </div>
+    </div>
+    <div class="exp-row">
+      <div class="exp-card">
+        <div class="exp-card-name">Пиротехника</div>
+        <div class="exp-card-date">01.07.2024 — 28.02.2026</div>
+      </div>
+      <div class="exp-dot"></div>
+      <div class="exp-spacer"></div>
+    </div>
+    <div class="exp-row right">
+      <div class="exp-spacer"></div>
+      <div class="exp-dot"></div>
+      <div class="exp-card">
+        <div class="exp-card-name">Полимерные трубы</div>
+        <div class="exp-card-date">25.10.2024 — 28.02.2026</div>
+      </div>
+    </div>
+    <div class="exp-row">
+      <div class="exp-card">
+        <div class="exp-card-name">Автозапчасти</div>
+        <div class="exp-card-date">25.02.2025 — 31.08.2026</div>
+      </div>
+      <div class="exp-dot"></div>
+      <div class="exp-spacer"></div>
+    </div>
+    <div class="exp-row right">
+      <div class="exp-spacer"></div>
+      <div class="exp-dot"></div>
+      <div class="exp-card">
+        <div class="exp-card-name">Средства гигиены</div>
+        <div class="exp-card-date">25.09.2025 — 31.08.2026</div>
+      </div>
+    </div>
+    <div class="exp-row">
+      <div class="exp-card">
+        <div class="exp-card-name">Товары для дома и интерьера</div>
+        <div class="exp-card-date">01.10.2025 — 31.08.2026</div>
+      </div>
+      <div class="exp-dot"></div>
+      <div class="exp-spacer"></div>
+    </div>
+    <div class="exp-row right">
+      <div class="exp-spacer"></div>
+      <div class="exp-dot"></div>
+      <div class="exp-card">
+        <div class="exp-card-name">Удобрения</div>
+        <div class="exp-card-date">01.11.2025 — 31.08.2026</div>
+      </div>
+    </div>
+    <div class="exp-row">
+      <div class="exp-card">
+        <div class="exp-card-name">Макароны, крупы, мёд</div>
+        <div class="exp-card-date">14.11.2025 — 28.02.2026</div>
+      </div>
+      <div class="exp-dot"></div>
+      <div class="exp-spacer"></div>
+    </div>
+    <div class="exp-row right">
+      <div class="exp-spacer"></div>
+      <div class="exp-dot"></div>
+      <div class="exp-card">
+        <div class="exp-card-name">Мясные изделия</div>
+        <div class="exp-card-date">24.11.2025 — 28.02.2026</div>
+      </div>
+    </div>
+    <div class="exp-row">
+      <div class="exp-card">
+        <div class="exp-card-name">Полуфабрикаты и замороженная продукция</div>
+        <div class="exp-card-date">24.11.2025 — 31.08.2026</div>
+      </div>
+      <div class="exp-dot"></div>
+      <div class="exp-spacer"></div>
+    </div>
+  </div>
+</section>
+
+<!-- RISKS -->
+<section class="risks reveal">
+  <div class="section-label">Зачем маркировать</div>
+  <h2>Риски без маркировки</h2>
+  <p class="section-intro">Штрафы и конфискация — это лишь начало. Настоящая угроза куда серьёзнее.</p>
+  <div class="risks-layout">
+    <div class="risk-block danger">
+      <div class="risk-label red">Административная ответственность</div>
+      <div class="risk-item"><div class="risk-dot"></div><div class="risk-text">5 000 — 10 000 ₽ для должностных лиц и ИП</div></div>
+      <div class="risk-item"><div class="risk-dot"></div><div class="risk-text">50 000 — 300 000 ₽ для юридических лиц</div></div>
+      <div class="risk-item"><div class="risk-dot"></div><div class="risk-text">Повышенные штрафы для табака, пива и слабоалкогольных напитков</div></div>
+      <div class="risk-highlight">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline;vertical-align:middle;margin-right:6px"><path d="M9 2L16.5 15H1.5L9 2Z" stroke="#E8007D" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 8V11" stroke="#E8007D" stroke-width="1.5" stroke-linecap="round"/><circle cx="9" cy="13.5" r="0.75" fill="#E8007D"/></svg>Уголовная ответственность: штрафы до 1 000 000 ₽ и лишение свободы до 5 лет при стоимости немаркированных товаров от 1,5 млн руб.
+      </div>
+    </div>
+    <div class="risk-block">
+      <div class="risk-label gray">Настоящая угроза</div>
+      <div class="risk-item"><div class="risk-dot"></div><div class="risk-text">Контрагенты откажутся принимать вашу продукцию</div></div>
+      <div class="risk-item"><div class="risk-dot"></div><div class="risk-text">Полная остановка отгрузок немаркированного товара</div></div>
+      <div class="risk-item"><div class="risk-dot"></div><div class="risk-text">Потеря рыночных позиций и клиентской базы</div></div>
+      <div class="risk-highlight">
+        Выход бизнеса из рынка — когда контрагенты откажутся принимать вашу продукцию без надлежащей маркировки.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUCTION STAGES -->
+<section class="stages reveal" id="stages">
+  <div class="section-label">Процессы на производстве</div>
+  <h2>Этапы работы с маркировкой</h2>
+  <p class="section-intro">Полный цикл: от регистрации в системе до подачи отчёта о вводе в оборот.</p>
+  <div class="stages-grid">
+    <div class="stage-item">
+      <div class="stage-n">1</div>
+      <div class="stage-name">Начало работы в системе маркировки</div>
+      <div class="stage-desc">УКЭП, ГИС МТ, личный кабинет</div>
+      <div class="stage-tooltip">
+        <div class="tt-step"><div class="tt-num">1.1</div><div class="tt-text">Получить <strong>УКЭП</strong>, установить драйвера и плагин для браузера</div></div>
+        <div class="tt-step"><div class="tt-num">1.2</div><div class="tt-text">Пройти регистрацию в <strong>ГИС МТ</strong></div></div>
+        <div class="tt-step"><div class="tt-num">1.3</div><div class="tt-text">Дозаполнить <strong>Профиль в ЛК</strong> и подписать договоры</div></div>
+      </div>
+    </div>
+    <div class="stage-item">
+      <div class="stage-n">2</div>
+      <div class="stage-name">Регистрация товаров в КМТ</div>
+      <div class="stage-desc">GS1, карточки, описание номенклатуры</div>
+      <div class="stage-tooltip">
+        <div class="tt-step"><div class="tt-num">2.1</div><div class="tt-text">Пройти регистрацию в <strong>GS1</strong> (можно из НК)</div></div>
+        <div class="tt-step"><div class="tt-num">2.2</div><div class="tt-text">Описать карточки в <strong>КМТ</strong></div></div>
+      </div>
+    </div>
+    <div class="stage-item">
+      <div class="stage-n">3</div>
+      <div class="stage-name">Настройка ПАК для маркировки</div>
+      <div class="stage-desc">Интегратор, оборудование, обучение</div>
+      <div class="stage-tooltip">
+        <div class="tt-step"><div class="tt-num">3.1</div><div class="tt-text">Выбрать <strong>системного интегратора</strong> / работа через ЛК</div></div>
+        <div class="tt-step"><div class="tt-num">3.2</div><div class="tt-text">Настроить <strong>оборудование с ПО</strong> (или ЛК)</div></div>
+        <div class="tt-step"><div class="tt-num">3.3</div><div class="tt-text"><strong>Обучение</strong> персонала и тестирование системы</div></div>
+      </div>
+    </div>
+    <div class="stage-item">
+      <div class="stage-n">4</div>
+      <div class="stage-name">Заказ кодов маркировки</div>
+      <div class="stage-desc">Баланс, СУЗ, способ оплаты</div>
+      <div class="stage-tooltip">
+        <div class="tt-step"><div class="tt-num">4.1</div><div class="tt-text">Пополнить <strong>баланс</strong> лицевого счёта</div></div>
+        <div class="tt-step"><div class="tt-num">4.2</div><div class="tt-text">Заказать КМ в <strong>СУЗ</strong></div></div>
+        <div class="tt-step"><div class="tt-num">4.3</div><div class="tt-text">Выбрать <strong>способ оплаты</strong> КМ</div></div>
+      </div>
+    </div>
+    <div class="stage-item">
+      <div class="stage-n">5</div>
+      <div class="stage-name">Маркировка продукции</div>
+      <div class="stage-desc">Печать и нанесение КМ на товар</div>
+      <div class="stage-tooltip">
+        <div class="tt-step"><div class="tt-num">5.1</div><div class="tt-text"><strong>Напечатать</strong> КМ</div></div>
+        <div class="tt-step"><div class="tt-num">5.2</div><div class="tt-text"><strong>Нанести</strong> КМ на продукцию</div></div>
+      </div>
+    </div>
+    <div class="stage-item">
+      <div class="stage-n">6</div>
+      <div class="stage-name">Подача отчёта о нанесении</div>
+      <div class="stage-desc">Верификация, квитанция СУЗ</div>
+      <div class="stage-tooltip">
+        <div class="tt-step"><div class="tt-num">6.1</div><div class="tt-text"><strong>Верифицировать</strong> КМ и подать отчёт о нанесении</div></div>
+        <div class="tt-step"><div class="tt-num">6.2</div><div class="tt-text">Квитанция в <strong>СУЗ</strong> с результатом обработки отчёта</div></div>
+      </div>
+    </div>
+    <div class="stage-item">
+      <div class="stage-n">7</div>
+      <div class="stage-name">Подача отчёта о вводе в оборот</div>
+      <div class="stage-desc">Финальный шаг — товар в системе</div>
+    </div>
+  </div>
+</section>
+
+<!-- EXPERIMENT PARTICIPATION -->
+<section class="exp-participation reveal" id="exp-participation">
+  <div class="section-label">Эксперимент</div>
+  <h2>Участие в эксперименте</h2>
+  <p class="section-intro">7 этапов от вступления в рабочую группу до подведения итогов. Нажмите на этап для деталей.</p>
+  <div class="ep-cards">
+    <div class="ep-card" onclick="this.classList.toggle('ep-open')">
+      <div class="ep-num">1</div>
+      <div class="ep-header">
+        <div class="ep-title">Вступление в рабочую группу эксперимента</div>
+        <svg class="ep-chevron" viewBox="0 0 20 20" fill="none"><path d="M5 8L10 13L15 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="ep-details"><div class="ep-details-inner">
+        <div><div class="ep-detail-label">Действие</div><div class="ep-detail-text">Отправить заявку на участие и получить подтверждение, вступить в рабочую группу</div></div>
+        <div><div class="ep-detail-label">Сроки</div><div class="ep-detail-text"><strong>Все время эксперимента</strong></div></div>
+        <div><div class="ep-detail-label">Ответственный</div><div class="ep-detail-text">Участник оборота товара (Производитель, Импортёр, Оптово-розничное звено), <strong>Оператор ЦРПТ</strong></div></div>
+      </div></div>
+    </div>
+    <div class="ep-card" onclick="this.classList.toggle('ep-open')">
+      <div class="ep-num">2</div>
+      <div class="ep-header">
+        <div class="ep-title">Экспресс-обследование</div>
+        <svg class="ep-chevron" viewBox="0 0 20 20" fill="none"><path d="M5 8L10 13L15 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="ep-details"><div class="ep-details-inner">
+        <div><div class="ep-detail-label">Действие</div><div class="ep-detail-text">Выслать на имя оператора заполненный опросный лист</div></div>
+        <div><div class="ep-detail-label">Сроки</div><div class="ep-detail-text">В течение <strong>2 недель</strong> после вступления в рабочую группу</div></div>
+        <div><div class="ep-detail-label">Ответственный</div><div class="ep-detail-text">Участник оборота товара</div></div>
+      </div></div>
+    </div>
+    <div class="ep-card" onclick="this.classList.toggle('ep-open')">
+      <div class="ep-num">3</div>
+      <div class="ep-header">
+        <div class="ep-title">Обследование от системного интегратора (СИ)</div>
+        <svg class="ep-chevron" viewBox="0 0 20 20" fill="none"><path d="M5 8L10 13L15 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="ep-details"><div class="ep-details-inner">
+        <div><div class="ep-detail-label">Действие</div><div class="ep-detail-text">Ознакомиться со списком СИ на честныйзнак.рф. Отправить запрос с опросным листом. При необходимости — выездное обследование</div></div>
+        <div><div class="ep-detail-label">Сроки</div><div class="ep-detail-text">В течение <strong>2 недель</strong> или по запросу на выбор СИ</div></div>
+        <div><div class="ep-detail-label">Ответственный</div><div class="ep-detail-text">Участник оборота, <strong>Оператор ЦРПТ</strong>, СИ</div></div>
+      </div></div>
+    </div>
+    <div class="ep-card" onclick="this.classList.toggle('ep-open')">
+      <div class="ep-num">4</div>
+      <div class="ep-header">
+        <div class="ep-title">Целевое техническое решение</div>
+        <svg class="ep-chevron" viewBox="0 0 20 20" fill="none"><path d="M5 8L10 13L15 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="ep-details"><div class="ep-details-inner">
+        <div><div class="ep-detail-label">Действие</div><div class="ep-detail-text">Разработать целевое техническое решение</div></div>
+        <div><div class="ep-detail-label">Сроки</div><div class="ep-detail-text">До <strong>2 месяцев</strong></div></div>
+        <div><div class="ep-detail-label">Ответственный</div><div class="ep-detail-text"><strong>СИ</strong></div></div>
+      </div></div>
+    </div>
+    <div class="ep-card" onclick="this.classList.toggle('ep-open')">
+      <div class="ep-num">5</div>
+      <div class="ep-header">
+        <div class="ep-title">Планирование эксперимента на площадке</div>
+        <svg class="ep-chevron" viewBox="0 0 20 20" fill="none"><path d="M5 8L10 13L15 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="ep-details"><div class="ep-details-inner">
+        <div><div class="ep-detail-label">Действие</div><div class="ep-detail-text">Выбрать СИ, согласовать предложение, определить GTIN и объём, согласовать сценарий и даты</div></div>
+        <div><div class="ep-detail-label">Сроки</div><div class="ep-detail-text">В течение <strong>2 недель</strong> после выбора СИ</div></div>
+        <div><div class="ep-detail-label">Ответственный</div><div class="ep-detail-text">Участник оборота, <strong>Оператор ЦРПТ</strong>, СИ</div></div>
+      </div></div>
+    </div>
+    <div class="ep-card" onclick="this.classList.toggle('ep-open')">
+      <div class="ep-num">6</div>
+      <div class="ep-header">
+        <div class="ep-title">Подготовка участника эксперимента</div>
+        <svg class="ep-chevron" viewBox="0 0 20 20" fill="none"><path d="M5 8L10 13L15 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="ep-details"><div class="ep-details-inner">
+        <div><div class="ep-detail-label">Действие</div><div class="ep-detail-text">Пройти регистрацию в ЛК, описать товары в НК, подготовить площадку по требованиям СИ</div></div>
+        <div><div class="ep-detail-label">Сроки</div><div class="ep-detail-text">В течение <strong>2 недель</strong> по истечении планирования или по согласованию</div></div>
+        <div><div class="ep-detail-label">Ответственный</div><div class="ep-detail-text">Участник оборота товара</div></div>
+      </div></div>
+    </div>
+    <div class="ep-card" onclick="this.classList.toggle('ep-open')">
+      <div class="ep-num">7</div>
+      <div class="ep-header">
+        <div class="ep-title">Проведение эксперимента и подведение итогов</div>
+        <svg class="ep-chevron" viewBox="0 0 20 20" fill="none"><path d="M5 8L10 13L15 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="ep-details"><div class="ep-details-inner">
+        <div><div class="ep-detail-label">Действие</div><div class="ep-detail-text">Провести эксперимент по сценарию, подвести итоги и подписать протокол, составить и согласовать отчёт от СИ</div></div>
+        <div><div class="ep-detail-label">Сроки</div><div class="ep-detail-text">По согласованию сторон</div></div>
+        <div><div class="ep-detail-label">Ответственный</div><div class="ep-detail-text">Участник оборота, <strong>Оператор ЦРПТ</strong>, СИ</div></div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- EXPERIMENT GOALS -->
+<section class="exp-goals reveal" id="exp-goals">
+  <div class="section-label">Зачем нужен эксперимент</div>
+  <h2>Цели участия в эксперименте</h2>
+  <p class="section-intro">Три ключевые причины не ждать обязательного внедрения, а начать уже сейчас.</p>
+  <div class="eg-grid">
+    <div class="eg-card">
+      <div class="eg-icon"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M28.5 8L20 16.5L22 18.5L30.5 10" stroke="#E8007D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M25 11.5L27.5 14" stroke="#E8007D" stroke-width="2" stroke-linecap="round"/><path d="M18.5 20L8 30.5L10 40L17.5 38L28 27.5" stroke="#E8007D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 34L14 36" stroke="#E8007D" stroke-width="2" stroke-linecap="round"/><circle cx="34" cy="14" r="6" stroke="#E8007D" stroke-width="2"/></svg></div>
+      <div class="eg-title">Подбор оптимального решения</div>
+      <div class="eg-desc">Тестирование различных вариантов оборудования и ПО в реальных производственных условиях до наступления обязательных требований. Экономия бюджета за счёт осознанного выбора.</div>
+    </div>
+    <div class="eg-card">
+      <div class="eg-icon"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="18" cy="14" r="5" stroke="#E8007D" stroke-width="2"/><circle cx="30" cy="14" r="5" stroke="#E8007D" stroke-width="2"/><path d="M8 34C8 28.5 12.5 24 18 24C20.5 24 22.8 24.9 24.5 26.4" stroke="#E8007D" stroke-width="2" stroke-linecap="round"/><path d="M40 34C40 28.5 35.5 24 30 24C27.5 24 25.2 24.9 23.5 26.4" stroke="#E8007D" stroke-width="2" stroke-linecap="round"/><path d="M18 36V34M30 36V34" stroke="#E8007D" stroke-width="2" stroke-linecap="round"/></svg></div>
+      <div class="eg-title">Ознакомление сотрудников с процессами</div>
+      <div class="eg-desc">Команда получает практический опыт работы с маркировкой в спокойном режиме — без стресса дедлайнов и штрафов. Обучение проходит в комфортном формате.</div>
+    </div>
+    <div class="eg-card">
+      <div class="eg-icon"><svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="8" y="8" width="32" height="32" rx="6" stroke="#E8007D" stroke-width="2"/><path d="M16 24L22 30L33 18" stroke="#E8007D" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="eg-title">Проверка надёжности интегратора</div>
+      <div class="eg-desc">Оценка компетенций системного интегратора на реальном проекте до окончательного выбора партнёра для полномасштабного внедрения. Снижение рисков при масштабировании.</div>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUCTION PROCESSES -->
+<section class="production reveal" id="production">
+  <div class="section-label">Процессы на производстве</div>
+  <h2>Производственная линия маркировки</h2>
+  <p class="section-intro">Полный цикл обработки продукции: от печати кода до сборки паллета перед отгрузкой.</p>
+  <div class="prod-pipeline">
+    <div class="prod-step">
+      <div class="prod-icon"><svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="14" width="24" height="14" rx="2" stroke="#E8007D" stroke-width="1.5"/><path d="M10 14V8H26V14" stroke="#E8007D" stroke-width="1.5"/><rect x="10" y="22" width="16" height="8" stroke="#E8007D" stroke-width="1.5"/><circle cx="26" cy="19" r="1.5" fill="#E8007D"/><path d="M10 26H26M10 29H20" stroke="#E8007D" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      <div class="prod-step-name">Печать</div>
+      <div class="prod-step-desc">Генерация и печать кодов DataMatrix на принтере или напрямую на упаковке</div>
+    </div>
+    <div class="prod-connector"><span>→</span></div>
+    <div class="prod-step">
+      <div class="prod-icon"><svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 6H22L30 14V30H8V6Z" stroke="#E8007D" stroke-width="1.5" stroke-linejoin="round"/><path d="M22 6V14H30" stroke="#E8007D" stroke-width="1.5"/><path d="M13 19H23M13 23H20" stroke="#E8007D" stroke-width="1.5" stroke-linecap="round"/><rect x="13" y="11" width="5" height="5" stroke="#E8007D" stroke-width="1.5"/></svg></div>
+      <div class="prod-step-name">Нанесение</div>
+      <div class="prod-step-desc">Этикетирование или прямое нанесение кода на единицу продукции</div>
+    </div>
+    <div class="prod-connector"><span>→</span></div>
+    <div class="prod-step prod-step-highlight">
+      <div class="prod-icon"><svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="18" cy="18" r="13" stroke="#E8007D" stroke-width="1.5"/><path d="M11 18L15.5 22.5L25 13" stroke="#E8007D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="prod-step-name">Сериализация</div>
+      <div class="prod-step-desc">Присвоение уникального кода DataMatrix и проверка его качества перед передачей в Честный ЗНАК</div>
+    </div>
+    <div class="prod-connector"><span>→</span></div>
+    <div class="prod-step prod-step-highlight">
+      <div class="prod-icon"><svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 4L30 10V26L18 32L6 26V10L18 4Z" stroke="#E8007D" stroke-width="1.5" stroke-linejoin="round"/><path d="M18 4V32M6 10L18 16L30 10M6 26L18 20L30 26" stroke="#E8007D" stroke-width="1.5"/></svg></div>
+      <div class="prod-step-name">Агрегация</div>
+      <div class="prod-step-desc">Объединение единиц товара в группы — короб, блок, паллет — с привязкой кодов</div>
+    </div>
+    <div class="prod-connector"><span>→</span></div>
+    <div class="prod-step">
+      <div class="prod-icon"><svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="22" width="28" height="4" rx="1" stroke="#E8007D" stroke-width="1.5"/><rect x="4" y="14" width="12" height="8" rx="1" stroke="#E8007D" stroke-width="1.5"/><rect x="20" y="14" width="12" height="8" rx="1" stroke="#E8007D" stroke-width="1.5"/><rect x="8" y="8" width="8" height="6" rx="1" stroke="#E8007D" stroke-width="1.5"/><rect x="20" y="8" width="8" height="6" rx="1" stroke="#E8007D" stroke-width="1.5"/><path d="M12 26V32M20 26V32M24 26V32" stroke="#E8007D" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      <div class="prod-step-name">Сборка паллет</div>
+      <div class="prod-step-desc">Финальная сборка и верификация паллета перед передачей в систему и отгрузкой</div>
+    </div>
+  </div>
+</section>
+
+<!-- SOLUTIONS -->
+<section class="solutions reveal" id="solutions">
+  <div class="section-label">Наше решение</div>
+  <h2>Комплексное внедрение маркировки</h2>
+  <p class="section-intro">Мы единственные на рынке, кто решает задачу целиком — от заказа кодов до отправки УПД по ЭДО.</p>
+  <div class="solutions-grid">
+    <div class="sol-card">
+      <div class="sol-top">
+        <div class="sol-icon"><svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="18" cy="18" r="5" stroke="white" stroke-width="1.5"/><path d="M18 6V10M18 26V30M6 18H10M26 18H30M9.51 9.51L12.34 12.34M23.66 23.66L26.49 26.49M26.49 9.51L23.66 12.34M12.34 23.66L9.51 26.49" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+        <div class="sol-title">Программная часть</div>
+      </div>
+      <div class="sol-body">
+        <div class="sol-point"><div class="sol-point-dot"></div><span>Установка, настройка и обновление учётной системы 1С</span></div>
+        <div class="sol-point"><div class="sol-point-dot"></div><span>Подключение к системе «Честный ЗНАК»</span></div>
+        <div class="sol-point"><div class="sol-point-dot"></div><span>Автоматический заказ кодов маркировки</span></div>
+        <div class="sol-point"><div class="sol-point-dot"></div><span>Передача отчётов о нанесении и агрегации</span></div>
+      </div>
+    </div>
+    <div class="sol-card">
+      <div class="sol-top dark">
+        <div class="sol-icon"><svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="20" width="30" height="13" rx="1" stroke="white" stroke-width="1.5"/><rect x="7" y="13" width="8" height="7" stroke="white" stroke-width="1.5"/><rect x="21" y="13" width="8" height="7" stroke="white" stroke-width="1.5"/><path d="M3 20L9 13" stroke="white" stroke-width="1.5"/><path d="M33 20L29 13" stroke="white" stroke-width="1.5"/><path d="M15 20V13M21 20V13" stroke="white" stroke-width="1.5"/><rect x="14" y="25" width="8" height="8" stroke="white" stroke-width="1.5"/></svg></div>
+        <div class="sol-title">Оборудование</div>
+      </div>
+      <div class="sol-body">
+        <div class="sol-point"><div class="sol-point-dot"></div><span>Подбор, установка и настройка печатного оборудования</span></div>
+        <div class="sol-point"><div class="sol-point-dot"></div><span>Станции сериализации и валидации БИТ.IIoT</span></div>
+        <div class="sol-point"><div class="sol-point-dot"></div><span>Аппликаторы, пушеры, датчики продукта</span></div>
+        <div class="sol-point"><div class="sol-point-dot"></div><span>ТСД для мобильных операций</span></div>
+      </div>
+    </div>
+    <div class="sol-card">
+      <div class="sol-top dark">
+        <div class="sol-icon"><svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 14L18 6L32 14V32H4V14Z" stroke="white" stroke-width="1.5" stroke-linejoin="round"/><rect x="12" y="22" width="12" height="10" stroke="white" stroke-width="1.5"/><path d="M12 18H24M8 18H10M26 18H28" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+        <div class="sol-title">Склад и логистика</div>
+      </div>
+      <div class="sol-body">
+        <div class="sol-point"><div class="sol-point-dot"></div><span>Автоматизация склада и работы с маркированными товарами</span></div>
+        <div class="sol-point"><div class="sol-point-dot"></div><span>Отправка УПД с кодами маркировки по ЭДО</span></div>
+        <div class="sol-point"><div class="sol-point-dot"></div><span>Техническое обслуживание и поддержка</span></div>
+        <div class="sol-point"><div class="sol-point-dot"></div><span>Мониторинг и контроль процессов маркировки</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRINT TYPES -->
+<section class="printing reveal">
+  <div class="section-label">Технологии</div>
+  <h2>Типы печати кодов</h2>
+  <p class="section-intro">Подбираем оптимальный метод под вашу упаковку, скорость линии и бюджет.</p>
+  <div class="print-grid">
+    <div class="print-card">
+      <div class="print-num">01</div>
+      <div class="print-name">Термотрансферная</div>
+      <div class="print-desc">Подходит для прямого нанесения и печати на этикетку. Хорошая износостойкость. Расходные материалы: красящая лента (риббон) и носитель.</div>
+      <div class="print-tag">Универсальная</div>
+    </div>
+    <div class="print-card">
+      <div class="print-num">02</div>
+      <div class="print-name">Термоструйная</div>
+      <div class="print-desc">Высококачественное и точное нанесение. Используется на пористых и непористых поверхностях. Подходит для маленьких этикеток.</div>
+      <div class="print-tag">Точная</div>
+    </div>
+    <div class="print-card">
+      <div class="print-num">03</div>
+      <div class="print-name">Пьезоструйная</div>
+      <div class="print-desc">Нанесение напрямую на упаковку чернилами. Подходит для больших объёмов производства. Стоимость печати DataMatrix значительно ниже.</div>
+      <div class="print-tag">Для объёмов</div>
+    </div>
+    <div class="print-card">
+      <div class="print-num">04</div>
+      <div class="print-name">Лазерная</div>
+      <div class="print-desc">Нанесение напрямую по поверхности: бутылки, банки или крышки. Высокая чёткость и износостойкость. Отсутствуют расходные материалы.</div>
+      <div class="print-tag">Премиум</div>
+    </div>
+  </div>
+</section>
+
+<!-- APPLICATION TYPES -->
+<section class="apptypes reveal" id="apptypes">
+  <div class="section-label">Типы нанесения</div>
+  <h2>Этикетирование vs Прямое нанесение</h2>
+  <p class="section-intro">Подбираем метод нанесения под вашу упаковку, скорость линии и задачи производства.</p>
+  <div class="apptypes-grid">
+    <div class="apptype-col">
+      <div class="apptype-header">Этикетирование</div>
+      <div class="apptype-body">
+        <ul class="apptype-points">
+          <li>Код маркировки наносится на этикетку, после готовая этикетка с кодом наносится на продукт</li>
+          <li>Автоматизированное или ручное</li>
+          <li>Производительность и цена оборудования средняя</li>
+          <li>Проще в эксплуатации и обслуживании</li>
+        </ul>
+        <div class="apptype-equip-title">ВАРИАНТЫ ОБОРУДОВАНИЯ</div>
+        <ul class="apptype-equip">
+          <li>Станции предпечати</li>
+          <li>Аппликатор А-150</li>
+          <li>Линейка принтер-аппликаторов Н-ПР</li>
+        </ul>
+        <a href="https://drive.google.com/file/d/1Ahs4Q2SZdu6jc9tKnIXFOpXzR2QDkkaX/view" target="_blank" class="video-link"><svg width="10" height="12" viewBox="0 0 10 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L9 6L1 11V1Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg> Видео применения</a>
+      </div>
+    </div>
+    <div class="apptype-col">
+      <div class="apptype-header">Прямое нанесение</div>
+      <div class="apptype-body">
+        <ul class="apptype-points">
+          <li>Код маркировки наносится сразу на упаковку на линии упаковки</li>
+          <li>Возможны термоструйная, пьезоструйная и лазерная типы печати</li>
+          <li>Возможность печати человекочитаемой информации и дублировать код</li>
+        </ul>
+        <div class="apptype-equip-title">ВАРИАНТЫ ОБОРУДОВАНИЯ</div>
+        <ul class="apptype-equip">
+          <li>Пролистыватель упаковки</li>
+          <li>Термоструйный принтер Docod</li>
+          <li>Термотрансферный принтер Videojet</li>
+          <li>Система лазерной маркировки FirstBit</li>
+        </ul>
+        <a href="https://drive.google.com/file/d/1AOHXfsKKry8Q5rAcZWXjvAj4igbyylUj/view" target="_blank" class="video-link"><svg width="10" height="12" viewBox="0 0 10 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L9 6L1 11V1Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg> Видео применения</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SERIALIZATION -->
+<section class="serialization reveal" id="serialization">
+  <div class="section-label">Контроль качества</div>
+  <h2>Сериализация и валидация</h2>
+  <p class="section-intro">Каждый код проходит проверку перед тем как попасть в систему Честный ЗНАК.</p>
+  <div class="serial-grid">
+    <div class="serial-card">
+      <div class="serial-num">01</div>
+      <div class="serial-title">Генерация кодов</div>
+      <div class="serial-desc">Уникальные коды DataMatrix генерируются в системе управления заказами (СУЗ) и загружаются в оборудование станции БИТ.IIoT.</div>
+      <div class="serial-steps">
+        <div class="serial-step"><div class="serial-step-dot"></div><span>Заказ кодов в личном кабинете Честного ЗНАКа</span></div>
+        <div class="serial-step"><div class="serial-step-dot"></div><span>Загрузка пула кодов на станцию</span></div>
+        <div class="serial-step"><div class="serial-step-dot"></div><span>Привязка к производственному заданию</span></div>
+      </div>
+    </div>
+    <div class="serial-card">
+      <div class="serial-num">02</div>
+      <div class="serial-title">Нанесение и верификация</div>
+      <div class="serial-desc">Станция БИТ.IIoT наносит код на каждую единицу и немедленно проверяет качество сканером — нечитаемые коды автоматически отбраковываются.</div>
+      <div class="serial-steps">
+        <div class="serial-step"><div class="serial-step-dot"></div><span>Печать кода на принтере или аппликаторе</span></div>
+        <div class="serial-step"><div class="serial-step-dot"></div><span>Сканирование и проверка качества кода</span></div>
+        <div class="serial-step"><div class="serial-step-dot"></div><span>Автоматическая отбраковка пушером при браке</span></div>
+      </div>
+    </div>
+    <div class="serial-card">
+      <div class="serial-num">03</div>
+      <div class="serial-title">Подача отчёта</div>
+      <div class="serial-desc">После нанесения система автоматически формирует и отправляет отчёт о нанесении в Честный ЗНАК. Квитанция СУЗ подтверждает успешную сериализацию.</div>
+      <div class="serial-steps">
+        <div class="serial-step"><div class="serial-step-dot"></div><span>Автоматическая верификация КМ</span></div>
+        <div class="serial-step"><div class="serial-step-dot"></div><span>Отправка отчёта о нанесении</span></div>
+        <div class="serial-step"><div class="serial-step-dot"></div><span>Получение квитанции и ввод в оборот</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- AGGREGATION -->
+<section class="aggregation reveal">
+  <div class="section-label">Агрегация</div>
+  <h2>Типы агрегации</h2>
+  <p class="section-intro">От ручной до полностью автоматической — выбираем подход под вашу производительность.</p>
+  <div class="agg-grid">
+    <div class="agg-card">
+      <div class="agg-head active">
+        <div class="agg-num">01</div>
+        <div class="agg-name">Ручная</div>
+      </div>
+      <div class="agg-body">
+        <div class="agg-item"><div class="plus-icon">+</div><span>Подходит для малых объёмов</span></div>
+        <div class="agg-item"><div class="plus-icon">+</div><span>Разнородная продукция</span></div>
+        <div class="agg-item"><div class="minus-icon">−</div><span>Высокая вероятность ошибок</span></div>
+        <div class="agg-item"><div class="minus-icon">−</div><span>Низкая скорость обработки</span></div>
+        <a href="https://drive.google.com/file/d/1blUCiHOmvaPzYyF1n34lQUbCorIdjsqH/view" target="_blank" class="video-link"><svg width="10" height="12" viewBox="0 0 10 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L9 6L1 11V1Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg> Видео применения</a>
+      </div>
+    </div>
+    <div class="agg-card">
+      <div class="agg-head">
+        <div class="agg-num">02</div>
+        <div class="agg-name">Гибридная</div>
+      </div>
+      <div class="agg-body">
+        <div class="agg-item"><div class="plus-icon">+</div><span>Инд. и групповые коды на одной ленте</span></div>
+        <div class="agg-item"><div class="plus-icon">+</div><span>Автоматическая привязка агр. кода</span></div>
+        <div class="agg-item"><div class="minus-icon">−</div><span>Высокий риск ошибок</span></div>
+        <a href="https://drive.google.com/file/d/1DlFieobbuxRRgX9-Iy9mgmpstaSEV7Js/view" target="_blank" class="video-link"><svg width="10" height="12" viewBox="0 0 10 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L9 6L1 11V1Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg> Видео применения</a>
+      </div>
+    </div>
+    <div class="agg-card">
+      <div class="agg-head active">
+        <div class="agg-num">03</div>
+        <div class="agg-name">Ручная со станцией</div>
+      </div>
+      <div class="agg-body">
+        <div class="agg-item"><div class="plus-icon">+</div><span>Автоматическая фиксация в системе</span></div>
+        <div class="agg-item"><div class="plus-icon">+</div><span>Высокая точность</span></div>
+        <div class="agg-item"><div class="plus-icon">+</div><span>Оптимальный баланс цена/качество</span></div>
+        <a href="https://drive.google.com/file/d/1NeRy0ik5mzdiRI6do88YgzVqH2v0rP_S/view" target="_blank" class="video-link"><svg width="10" height="12" viewBox="0 0 10 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L9 6L1 11V1Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg> Видео применения</a>
+      </div>
+    </div>
+    <div class="agg-card">
+      <div class="agg-head">
+        <div class="agg-num">04</div>
+        <div class="agg-name">Автоматическая</div>
+      </div>
+      <div class="agg-body">
+        <div class="agg-item"><div class="plus-icon">+</div><span>Максимальная производительность</span></div>
+        <div class="agg-item"><div class="plus-icon">+</div><span>Не требует участия оператора</span></div>
+        <div class="agg-item"><div class="plus-icon">+</div><span>Работа 24/7</span></div>
+        <a href="https://drive.google.com/file/d/1sYGt_RkfTjzViVs2qN6-4uR8RUgtTiDN/view" target="_blank" class="video-link"><svg width="10" height="12" viewBox="0 0 10 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L9 6L1 11V1Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg> Видео применения</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SOFTWARE -->
+<section class="software reveal" id="software">
+  <div class="section-label">Работа программного обеспечения</div>
+  <h2>Программно-аппаратный комплекс<br>БИТ.IIoT и БИТ.MDT</h2>
+  <p class="section-intro">Единая платформа управления маркировкой — от заказа кодов до передачи отчётов в Честный ЗНАК.</p>
+
+  <div class="sw-header-badge">
+    <div class="sw-header-badge-icon"><svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="6" width="24" height="16" rx="2" stroke="#E8007D" stroke-width="1.5"/><path d="M12 26H20" stroke="#E8007D" stroke-width="1.5" stroke-linecap="round"/><path d="M16 22V26" stroke="#E8007D" stroke-width="1.5"/><path d="M10 12L13 15L10 18" stroke="#E8007D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 18H22" stroke="#E8007D" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+    <div class="sw-header-badge-text">Программно-аппаратный комплекс для маркировки<br>БИТ.IIoT и БИТ.MDT</div>
+  </div>
+
+  <div class="sw-grid">
+    <div class="sw-card">
+      <div class="sw-card-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#E8007D" stroke-width="1.5" stroke-linejoin="round"/><path d="M2 17L12 22L22 17" stroke="#E8007D" stroke-width="1.5" stroke-linejoin="round"/><path d="M2 12L12 17L22 12" stroke="#E8007D" stroke-width="1.5" stroke-linejoin="round"/></svg></div>
+      <div>
+        <div class="sw-card-title">Автоматизация и минимизация ручного труда</div>
+        <div class="sw-card-desc">Система автоматически заказывает коды маркировки в «Честном ЗНАКе», формирует задания на производственные участки, а также передаёт отчёты о нанесении и агрегации.</div>
+      </div>
+    </div>
+    <div class="sw-card">
+      <div class="sw-card-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="3" width="7" height="7" rx="1" stroke="#E8007D" stroke-width="1.5"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="#E8007D" stroke-width="1.5"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="#E8007D" stroke-width="1.5"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="#E8007D" stroke-width="1.5"/><circle cx="6.5" cy="6.5" r="1" fill="#E8007D"/><path d="M17.5 5V8M16 6.5H19" stroke="#E8007D" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+      <div>
+        <div class="sw-card-title">Мониторинг и контроль</div>
+        <div class="sw-card-desc">Система предоставляет инструменты для отслеживания процессов маркировки. Например, отчёт «Выпуск маркированной продукции» позволяет анализировать данные о выпуске, отбраковке и статусе кодов маркировки.</div>
+      </div>
+    </div>
+    <div class="sw-card">
+      <div class="sw-card-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="3" width="20" height="18" rx="2" stroke="#E8007D" stroke-width="1.5"/><path d="M8 12H16M8 16H13" stroke="#E8007D" stroke-width="1.5" stroke-linecap="round"/><path d="M8 8H16" stroke="#E8007D" stroke-width="1.5" stroke-linecap="round"/><path d="M2 7H22" stroke="#E8007D" stroke-width="1.2"/></svg></div>
+      <div>
+        <div class="sw-card-title">Удобство и простота использования</div>
+        <div class="sw-card-desc">Многие операции — приёмка, отгрузка, агрегация и сериализация — выполняются с помощью терминалов сбора данных (ТСД), что делает процесс мобильным и удобным. Создание расходного ордера или приёмка максимально упрощены.</div>
+      </div>
+    </div>
+    <div class="sw-card">
+      <div class="sw-card-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="3" stroke="#E8007D" stroke-width="1.5"/><path d="M12 2V5M12 19V22M22 12H19M5 12H2M19.07 4.93L16.95 7.05M7.05 16.95L4.93 19.07M19.07 19.07L16.95 16.95M7.05 7.05L4.93 4.93" stroke="#E8007D" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      <div>
+        <div class="sw-card-title">Гибкость и поддержка разнообразных сценариев</div>
+        <div class="sw-card-desc">ПО поддерживает множество различных производственных и складских операций, адаптируясь под нужды конкретного предприятия. Система работает со станциями сериализации, валидации, ручной и автоматической агрегации, предпечати и т.д.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ARCHITECTURE -->
+<section class="architecture reveal">
+  <div class="section-label">Архитектура</div>
+  <h2>Архитектура решения БИТ.IIoT</h2>
+  <p class="section-intro">Четырёхуровневая пирамида управления — от ПЛК и датчиков до ERP-системы 1С.</p>
+  <div class="arch-layers" data-stagger-arch>
+    <div class="arch-layer l4">
+      <div class="arch-lnum">L4</div>
+      <div class="arch-lname">ERP</div>
+      <div class="arch-ldesc">1С:ERP Управление предприятием 2 + БИТ.MDT</div>
+    </div>
+    <div class="arch-layer l3">
+      <div class="arch-lnum">L3</div>
+      <div class="arch-lname">MES · WMS</div>
+      <div class="arch-ldesc">PostgreSQL · Spark</div>
+    </div>
+    <div class="arch-layer l2">
+      <div class="arch-lnum">L2</div>
+      <div class="arch-lname">SCADA · HMI · ТСД</div>
+      <div class="arch-ldesc">БИТ.MDT + БИТ.Data Provider</div>
+    </div>
+    <div class="arch-layer l1">
+      <div class="arch-lnum">L1</div>
+      <div class="arch-lname">ПЛК · Пушеры · Датчики</div>
+      <div class="arch-ldesc">Python · Ubuntu</div>
+    </div>
+  </div>
+</section>
+
+<!-- CASES -->
+<section class="clients reveal" id="cases">
+  <div class="section-label">Наши клиенты</div>
+  <h2>Нам доверяют лидеры рынка</h2>
+  <p class="section-intro">Более 100 производств внедрили маркировку с Первым Битом</p>
+  <div class="wordcloud">
+    <span class="wc-word wc-xl  wc-pink">ЯШКИНО</span>
+    <span class="wc-word wc-xl">VITEX</span>
+    <span class="wc-word wc-xl  wc-pink">LITOKOL</span>
+    <span class="wc-word wc-lg">НФКЗ</span>
+    <span class="wc-word wc-lg  wc-pink">ЕРМОЛИНО</span>
+    <span class="wc-word wc-lg">Аквалайн</span>
+    <span class="wc-word wc-lg  wc-pink">ВМПАВТО</span>
+    <span class="wc-word wc-md">Евротрейд</span>
+    <span class="wc-word wc-md  wc-pink">Щекиноазот</span>
+    <span class="wc-word wc-md">ГК Квалитет</span>
+    <span class="wc-word wc-md  wc-pink">HAAS Russia</span>
+    <span class="wc-word wc-md">КССС</span>
+    <span class="wc-word wc-md  wc-pink">СВОБОДА Москва</span>
+    <span class="wc-word wc-md">Твинс Тэк</span>
+    <span class="wc-word wc-sm  wc-pink">Hobby World</span>
+    <span class="wc-word wc-sm">Десятое Королевство</span>
+    <span class="wc-word wc-sm  wc-pink">Estilab</span>
+    <span class="wc-word wc-sm">ВБЦЗ</span>
+  </div>
+</section>
+
+<!-- CASE DETAIL 1 -->
+<section class="case-detail reveal" id="case1">
+  <div class="section-label">Кейс 01</div>
+  <h2>Прямое нанесение на упаковку<br>и поштучная агрегация</h2>
+  <p class="section-intro">Реализованный проект на производстве смазочных материалов</p>
+  <div class="case-detail-layout">
+    <div class="case-detail-left">
+      <div class="case-detail-block">
+        <div class="case-detail-block-title">ПЕЧАТЬ И НАНЕСЕНИЕ</div>
+        <ul class="case-detail-points">
+          <li>Прямая печать на упаковку с помощью термотрансферного принтера Videojet</li>
+          <li>Нанесение непосредственно на производственной линии без остановки</li>
+        </ul>
+      </div>
+      <div class="case-detail-block">
+        <div class="case-detail-block-title">АГРЕГАЦИЯ</div>
+        <ul class="case-detail-points">
+          <li>Поштучная агрегация в короб через станцию агрегации БИТ.IIoT</li>
+          <li>В случае брака — возможно изъятие единичных кодов с помощью ТСД без остановки линии</li>
+        </ul>
+      </div>
+      <div class="case-detail-result">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline;vertical-align:middle;margin-right:6px"><circle cx="7" cy="7" r="6" stroke="#E8007D" stroke-width="1.2"/><path d="M4.5 7L6 8.5L9.5 5" stroke="#E8007D" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Результат: полная прослеживаемость от единицы товара до короба. Автоматическая передача данных в Честный ЗНАК.
+      </div>
+    </div>
+    <div class="case-photos-grid">
+      <div class="case-photo">
+        <img src="photos/photo01.png" alt="Принтер Videojet на линии">
+      </div>
+      <div class="case-photo">
+        <img src="photos/photo02.png" alt="Станция агрегации БИТ.IIoT">
+      </div>
+      <div class="case-photo">
+        <img src="photos/photo03.png" alt="Панель управления станции">
+      </div>
+      <div class="case-photo">
+        <img src="photos/photo04.png" alt="Промаркированный товар в коробе">
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- CASE DETAIL 2 -->
+<section class="case-detail reveal" id="case2" style="background: var(--black);">
+  <div class="section-label">Кейс 02</div>
+  <h2>Автоматическое нанесение<br>и послойная агрегация</h2>
+  <p class="section-intro">Реализованный проект на производстве бытовой химии</p>
+  <div class="case-detail-layout">
+    <div class="case-detail-left">
+      <div class="case-detail-block">
+        <div class="case-detail-block-title">ПЕЧАТЬ И НАНЕСЕНИЕ</div>
+        <ul class="case-detail-points">
+          <li>Печать этикеток на станции предпечати БИТ.IIoT</li>
+          <li>Нанесение через автоматический аппликатор без участия оператора</li>
+        </ul>
+      </div>
+      <div class="case-detail-block">
+        <div class="case-detail-block-title">АГРЕГАЦИЯ</div>
+        <ul class="case-detail-points">
+          <li>Групповая агрегация через станцию послойной агрегации БИТ.IIoT</li>
+          <li>Для сборки паллета сканируется код маркировки терминалом сбора данных</li>
+        </ul>
+      </div>
+      <div class="case-detail-result">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline;vertical-align:middle;margin-right:6px"><circle cx="7" cy="7" r="6" stroke="#E8007D" stroke-width="1.2"/><path d="M4.5 7L6 8.5L9.5 5" stroke="#E8007D" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Результат: полная автоматизация от единицы до паллета без участия оператора. Мгновенная передача данных в Честный ЗНАК.
+      </div>
+    </div>
+    <div class="case-photos-grid case-photos-grid--3">
+      <div class="case-photo case-photo--wide">
+        <img src="photos/photo05.png" alt="Производственная линия BLS Engineering">
+      </div>
+      <div class="case-photo">
+        <img src="photos/photo06.png" alt="Станция предпечати на линии">
+      </div>
+      <div class="case-photo">
+        <img src="photos/photo07.png" alt="Агрегированный паллет">
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- CASE DETAIL 3 -->
+<section class="case-detail reveal" id="case3">
+  <div class="section-label">Кейс 03</div>
+  <h2>Ручное нанесение<br>и гибридная агрегация</h2>
+  <p class="section-intro">Ручная маркировка кондитерской продукции с гибридной агрегацией в короб</p>
+  <div class="case-detail-layout">
+    <div class="case-detail-left">
+      <div class="case-detail-block">
+        <div class="case-detail-block-title">ПЕЧАТЬ И НАНЕСЕНИЕ</div>
+        <ul class="case-detail-points">
+          <li>Печать этикеток на станции предпечати БИТ.IIoT</li>
+          <li>Нанесение вручную оператором на каждую единицу товара</li>
+        </ul>
+      </div>
+      <div class="case-detail-block">
+        <div class="case-detail-block-title">АГРЕГАЦИЯ</div>
+        <ul class="case-detail-points">
+          <li>После всех индивидуальных кодов наносится последний — агрегационный для короба</li>
+          <li>Проверка корректности при сборке паллета: если на коробе останется индивидуальный код, ТСД не сможет его считать и выдаст ошибку</li>
+        </ul>
+      </div>
+      <div class="case-detail-result">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline;vertical-align:middle;margin-right:6px"><circle cx="7" cy="7" r="6" stroke="#E8007D" stroke-width="1.2"/><path d="M4.5 7L6 8.5L9.5 5" stroke="#E8007D" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Результат: простая и надёжная схема для ручного производства. Встроенная защита от ошибок агрегации без автоматики.
+      </div>
+    </div>
+    <div class="case-photos-grid case-photos-grid--3">
+      <div class="case-photo case-photo--wide">
+        <img src="photos/photo08.png" alt="Ручное нанесение этикеток на продукцию">
+      </div>
+      <div class="case-photo">
+        <img src="photos/photo09.png" alt="Короб с агрегационным кодом">
+      </div>
+      <div class="case-photo">
+        <img src="photos/photo10.png" alt="Нанесение этикетки вручную">
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ADVANTAGES -->
+<section class="advantages reveal" id="advantages">
+  <div class="section-label">Почему Первый Бит</div>
+  <h2>Наши преимущества</h2>
+  <p class="section-intro">Более 1 200 станций на 600+ производственных линиях. 35% автоматических станций работают 24/7.</p>
+  <div class="adv-grid">
+    <div class="adv-card">
+      <div class="adv-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="#E8007D" stroke-width="1.5"/><circle cx="12" cy="12" r="5" stroke="#E8007D" stroke-width="1.5"/><circle cx="12" cy="12" r="1.5" fill="#E8007D"/><path d="M12 3V6M12 18V21M3 12H6M18 12H21" stroke="#E8007D" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      <div class="adv-title">Решение бизнес-задачи</div>
+      <div class="adv-desc">Мы единственные на рынке, кто решает задачу целиком: от заказа кодов и нанесения до складской логистики, учёта и отправки УПД с кодами по ЭДО.</div>
+    </div>
+    <div class="adv-card">
+      <div class="adv-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L20 6V12C20 16.4 16.4 20.2 12 21C7.6 20.2 4 16.4 4 12V6L12 3Z" stroke="#E8007D" stroke-width="1.5" stroke-linejoin="round"/><path d="M8.5 12L10.5 14L15.5 9" stroke="#E8007D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="adv-title">Исключение штрафов</div>
+      <div class="adv-desc">Система гарантирует, что в отгрузку попадёт только продукция, введённая в оборот. Фоновая синхронизация с «Честным ЗНАКом» поддерживает актуальность статусов.</div>
+    </div>
+    <div class="adv-card">
+      <div class="adv-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14.7 6.3C14.1 5.7 13.1 5.3 12 5.3C9.5 5.3 7.5 7.3 7.5 9.8C7.5 11 8 12.1 8.8 12.9L3.5 18.2L5.8 20.5L11.1 15.2C11.9 16 13 16.5 14.2 16.5C16.7 16.5 18.7 14.5 18.7 12C18.7 10.9 18.3 9.9 17.7 9.3L15.5 11.5L13.5 9.5L15.7 7.3C15.4 6.9 15.1 6.6 14.7 6.3Z" stroke="#E8007D" stroke-width="1.5" stroke-linejoin="round"/></svg></div>
+      <div class="adv-title">Гибкость станций</div>
+      <div class="adv-desc">Автоматические станции БИТ.IIoT синхронизируются с ТСД. Операторы могут в реальном времени выполнять корректировки без остановки линии.</div>
+    </div>
+    <div class="adv-card">
+      <div class="adv-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 3H16V13C16 15.2 14.2 17 12 17C9.8 17 8 15.2 8 13V3Z" stroke="#E8007D" stroke-width="1.5"/><path d="M8 6H5C5 6 4 10 7 11" stroke="#E8007D" stroke-width="1.5" stroke-linecap="round"/><path d="M16 6H19C19 6 20 10 17 11" stroke="#E8007D" stroke-width="1.5" stroke-linecap="round"/><path d="M12 17V20M9 20H15" stroke="#E8007D" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      <div class="adv-title">Подтверждённый опыт</div>
+      <div class="adv-desc">Более 1 200 станций сериализации и агрегации на 600+ производственных линиях. 35% автоматических станций БИТ.IIoT функционируют в режиме 24/7.</div>
+    </div>
+    <div class="adv-card">
+      <div class="adv-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="#E8007D" stroke-width="1.5"/><path d="M12 3C12 3 8 7 8 12C8 17 12 21 12 21" stroke="#E8007D" stroke-width="1.5"/><path d="M12 3C12 3 16 7 16 12C16 17 12 21 12 21" stroke="#E8007D" stroke-width="1.5"/><path d="M3 12H21" stroke="#E8007D" stroke-width="1.5"/><path d="M4 8H20M4 16H20" stroke="#E8007D" stroke-width="1.5"/></svg></div>
+      <div class="adv-title">Масштаб</div>
+      <div class="adv-desc">Среди клиентов — производственные площадки, выпускающие более 4 млн кодов в месяц. Облачный архив позволяет работать с историей по миллиардам кодов.</div>
+    </div>
+    <div class="adv-card">
+      <div class="adv-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 14C5 9 8.1 5 12 5C15.9 5 19 9 19 14" stroke="#E8007D" stroke-width="1.5" stroke-linecap="round"/><rect x="3" y="14" width="4" height="6" rx="1" stroke="#E8007D" stroke-width="1.5"/><rect x="17" y="14" width="4" height="6" rx="1" stroke="#E8007D" stroke-width="1.5"/></svg></div>
+      <div class="adv-title">Поддержка</div>
+      <div class="adv-desc">В подписку включена поддержка по будням с 7:00 до 19:00. Дополнительно доступны круглосуточная поддержка L1/L2 и сервис на английском языке.</div>
+    </div>
+  </div>
+</section>
+
+
+<!-- CTA -->
+<section class="cta" id="cta">
+  <div class="cta-bg"></div>
+  <div class="cta-content">
+    <div class="section-label" style="text-align:center">Начать работу</div>
+    <h2>Готовы внедрить маркировку?</h2>
+    <p>Посетите наш шоурум или запишитесь на онлайн-демо с экспертом. Протестируйте маркировку на вашей продукции.</p>
+    <div class="cta-btns">
+      <a href="#contacts" class="btn-primary">Связаться с нами →</a>
+      <a href="#contacts" class="btn-ghost">Записаться на демо</a>
+    </div>
+    <div class="contact-info">
+      Шоурум: г. Москва, Воронцовская улица, 35Ас1 &nbsp;·&nbsp;
+      <a href="https://1bit.ru">1bit.ru</a>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACTS -->
+<section class="contacts-section reveal" id="contacts">
+  <div class="section-label">Контакты</div>
+  <h2>Готовы обсудить проект</h2>
+  <p class="section-intro">Ответим на вопросы и согласуем детали в удобном формате</p>
+  <div class="contacts-grid">
+<a href="/cdn-cgi/l/email-protection#a2ede3efd7d8dbc9c3e293c1c0cbd68cd0d79dd1d7c0c8c7c1d69f72357212721d7322721c732382721f7212827210721f7217721673227217721f721a721782721e721273227218721a7322721c72107218721a" class="contact-card">
+      <div class="contact-type">EMAIL</div>
+      <div class="contact-value"><span class="__cf_email__" data-cfemail="226d636f57585b4943621341404b560c5057">[email&#160;protected]</span></div>
+    </a>
+    <a href="tel:+79522225077" class="contact-card">
+      <div class="contact-type">ТЕЛЕФОН</div>
+      <div class="contact-value">+7 (952) 222-50-77</div>
+    </a>
+    <a href="https://t.me/muzyka_ole" target="_blank" class="contact-card">
+      <div class="contact-type">TELEGRAM</div>
+      <div class="contact-value">@muzyka_ole</div>
+    </a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="logo">первый<span style="color:var(--pink)">бит</span> &nbsp;·&nbsp; Промышленная маркировка</div>
+  <div>© 2026 Первый Бит &nbsp;·&nbsp; <a href="https://1bit.ru">1bit.ru</a></div>
+</footer>
+
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  // ══════════════════════════════════════════════════
+  // SCROLL REVEAL — базовая анимация появления секций
+  // Фикс: убран rootMargin -60px который мешал срабатыванию.
+  // Добавлен тройной fallback: DOMContentLoaded + load + timeout
+  // ══════════════════════════════════════════════════
+  const reveals = document.querySelectorAll('.reveal');
+
+  // Функция принудительной проверки — показать всё что уже в viewport
+  function checkRevealInView() {
+    reveals.forEach(r => {
+      const rect = r.getBoundingClientRect();
+      if (rect.top < window.innerHeight + 10) {
+        r.classList.add('visible');
+      }
+    });
+  }
+
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        revealObserver.unobserve(e.target);
+      }
+    });
+  // rootMargin убран — не обрезаем зону срабатывания
+  }, { threshold: 0 });
+  reveals.forEach(r => revealObserver.observe(r));
+
+  // Тройной fallback — срабатывает при любом сценарии загрузки
+  document.addEventListener('DOMContentLoaded', checkRevealInView);
+  window.addEventListener('load', checkRevealInView);
+  // На случай если браузер восстановил скролл-позицию после перезагрузки
+  setTimeout(checkRevealInView, 100);
+
+  // ══════════════════════════════════════════════════
+  // COUNTER ANIMATION — Odometer Effect
+  // Паттерн: animated number roll для ключевых метрик
+  // ══════════════════════════════════════════════════
+  function animateCounter(el) {
+    const raw = el.textContent.trim();
+    // Извлекаем числовую часть и суффикс
+    const match = raw.match(/^([\d\s.,]+)(.*)/);
+    if (!match) return;
+    
+    const numStr = match[1].replace(/\s/g, '').replace(',', '.');
+    const suffix = match[2] || '';
+    const target = parseFloat(numStr);
+    
+    if (isNaN(target)) return;
+    
+    const duration = 1800;
+    const start = performance.now();
+    
+    el.classList.add('counting');
+    
+    function update(now) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      // Easing: easeOutExpo
+      const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      
+      const current = target * eased;
+      
+      // Форматируем число
+      let display;
+      if (target >= 1000) {
+        display = Math.round(current).toLocaleString('ru-RU').replace(/,/g, ' ');
+      } else if (target % 1 !== 0) {
+        display = current.toFixed(1);
+      } else {
+        display = Math.round(current).toString();
+      }
+      
+      el.textContent = display + suffix;
+      
+      if (progress < 1) {
+        requestAnimationFrame(update);
+      } else {
+        el.textContent = raw; // Восстанавливаем точное оригинальное значение
+        el.classList.remove('counting');
+      }
+    }
+    
+    requestAnimationFrame(update);
+  }
+
+  // Наблюдаем за числами — запускаем counter при появлении
+  const counterObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        animateCounter(e.target);
+        counterObserver.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.5 });
+
+  document.querySelectorAll('.stat-num, .num-big').forEach(el => {
+    counterObserver.observe(el);
+  });
+
+  // ══════════════════════════════════════════════════
+  // ARCHITECTURE PYRAMID — стаггерная анимация
+  // Паттерн: Cascade Reveal снизу вверх (L1→L4)
+  // ══════════════════════════════════════════════════
+  // ── ARCH OBSERVER — надёжный триггер пирамиды ──
+  // threshold: 0 + rootMargin чтобы не упустить момент
+  const archObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        archObserver.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0, rootMargin: '0px 0px -80px 0px' });
+
+  document.querySelectorAll('[data-stagger-arch]').forEach(el => {
+    archObserver.observe(el);
+  });
+
+  // Проверяем при загрузке — вдруг секция уже в viewport
+  window.addEventListener('load', () => {
+    document.querySelectorAll('[data-stagger-arch]').forEach(el => {
+      const rect = el.getBoundingClientRect();
+      if (rect.top < window.innerHeight - 80) {
+        el.classList.add('visible');
+      }
+    });
+  });
+
+  // ══════════════════════════════════════════════════
+  // NAV ACTIVE STATE — подсвечивает текущий раздел
+  // ══════════════════════════════════════════════════
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('nav a[href^="#"]');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => {
+      if (window.scrollY >= s.offsetTop - 120) current = s.id;
+    });
+    navLinks.forEach(a => {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+    });
+  }, { passive: true });
+
+  // ══════════════════════════════════════════════════
+  // HERO GRID PARALLAX — лёгкий параллакс на сетке
+  // Паттерн: Subtle Depth через transform на скролле
+  // Отключаем на мобильных — экономим CPU и батарею
+  // ══════════════════════════════════════════════════
+  const heroGrid = document.querySelector('.hero-grid');
+  const isTouchDevice = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+  if (heroGrid && !isTouchDevice) {
+    window.addEventListener('scroll', () => {
+      const scrollY = window.scrollY;
+      const heroHeight = document.querySelector('.hero').offsetHeight;
+      if (scrollY < heroHeight) {
+        const offset = scrollY * 0.2;
+        heroGrid.style.transform = `translateY(${offset}px)`;
+      }
+    }, { passive: true });
+  }
+
+  // ══════════════════════════════════════════════════
+  // MAGNETIC BUTTONS — кнопки тянутся к курсору
+  // Паттерн: Magnetic UI — топ-эффект агентств уровня 
+  // Huge Design, Fantasy.co
+  // Только на устройствах с мышью — не работает на touch
+  // ══════════════════════════════════════════════════
+  if (!isTouchDevice) {
+  document.querySelectorAll('.btn-primary, .btn-ghost').forEach(btn => {
+    btn.addEventListener('mousemove', (e) => {
+      const rect = btn.getBoundingClientRect();
+      const x = e.clientX - rect.left - rect.width / 2;
+      const y = e.clientY - rect.top - rect.height / 2;
+      btn.style.transform = `translate(${x * 0.15}px, ${y * 0.25}px)`;
+    });
+    btn.addEventListener('mouseleave', () => {
+      btn.style.transform = '';
+      btn.style.transition = 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+      setTimeout(() => { btn.style.transition = ''; }, 400);
+    });
+  });
+  } // конец if(!isTouchDevice)
+
+  // ══════════════════════════════════════════════════
+  // WORDCLOUD RANDOM FLOAT — разные задержки у слов
+  // На мобильных — уменьшаем амплитуду анимации
+  // чтобы не нагружать GPU на слабых устройствах
+  // ══════════════════════════════════════════════════
+  document.querySelectorAll('.wc-word').forEach(word => {
+    const delay = (Math.random() * 6).toFixed(2);
+    // На мобильных — чуть медленнее для экономии батареи
+    const duration = isTouchDevice
+      ? (8 + Math.random() * 4).toFixed(2)
+      : (5 + Math.random() * 3).toFixed(2);
+    word.style.animationDelay = `-${delay}s`;
+    word.style.animationDuration = `${duration}s`;
+  });
+
+
+  // ── DATAMATRIX ГЕНЕРАЦИЯ ──────────────────────
+  // Реальный паттерн DataMatrix (упрощённый для визуала)
+  (function generateDM() {
+    const container = document.getElementById('dmCode');
+    if (!container) return;
+    const pattern = [
+      1,1,1,1,1,1,1,1,
+      1,0,1,0,1,1,0,0,
+      1,1,0,0,1,0,1,0,
+      1,0,1,1,0,0,0,0,
+      1,1,1,0,0,1,1,0,
+      1,0,0,1,1,0,0,0,
+      1,1,0,0,0,1,0,0,
+      1,1,1,1,1,1,1,1,
+    ];
+    pattern.forEach((bit, i) => {
+      const cell = document.createElement('div');
+      cell.className = 'dm-cell' + (bit ? '' : ' empty');
+      // Случайный flickering с разными задержками
+      if (bit && Math.random() > 0.6) {
+        cell.style.animationDuration = (3 + Math.random() * 3).toFixed(1) + 's';
+        cell.style.animationDelay = (Math.random() * 4).toFixed(1) + 's';
+        cell.style.animation = `dmFlicker ${(3 + Math.random() * 3).toFixed(1)}s ease-in-out ${(Math.random() * 2).toFixed(1)}s infinite`;
+      }
+      container.appendChild(cell);
+    });
+  })();
+
+
+  // ── HAMBURGER MENU ────────────────────────────────
+  // Паттерн: Toggle с блокировкой скролла body
+  const burger = document.getElementById('navBurger');
+  const mobileNav = document.getElementById('navMobile');
+
+  function toggleMenu(open) {
+    burger.classList.toggle('open', open);
+    mobileNav.classList.toggle('open', open);
+    document.body.style.overflow = open ? 'hidden' : '';
+  }
+
+  burger.addEventListener('click', () => {
+    const isOpen = mobileNav.classList.contains('open');
+    toggleMenu(!isOpen);
+  });
+
+  // Закрываем меню при клике на ссылку
+  document.querySelectorAll('.nav-mobile-link').forEach(link => {
+    link.addEventListener('click', () => toggleMenu(false));
+  });
+
+  // HERO FALLBACK: если CSS-анимация не сработала — показываем принудительно
+  setTimeout(() => {
+    document.querySelectorAll('.hero-line-inner').forEach(el => {
+      el.style.transform = 'translateY(0)';
+      el.style.opacity = '1';
+      el.style.transition = 'none';
+    });
+  }, 1500);
+
+</script>
+</body>
+</html>
